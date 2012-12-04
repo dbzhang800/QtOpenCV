@@ -54,9 +54,9 @@ defineTest(add_opencv_modules) {
     } else {
         OPENCV_VERSION = $$2
     }
-    OPENCV_VERSION ~= s,\.,,
+    OPENCV_VERSION ~= s,\\.,,
 
-    for (part, 1) {
+    for(part, 1) {
         name = opencv_$$part
         win32 {
             name = $${name}$${OPENCV_VERSION}
