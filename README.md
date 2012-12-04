@@ -37,6 +37,7 @@ add_opencv_modules(core imgproc highgui)
  * If OpenCV2 doesn't installed in the standard directory, header files paths and library paths should be provided. There are more that four ways to do so.
 
   * set system environment variables to tell qmake or QtCreator.
+
 ```
    set OPENCV_VERSION=2.4.3
    set OPENCV_INCPATH=D:/opencv/build/include
@@ -45,18 +46,22 @@ add_opencv_modules(core imgproc highgui)
 ```
 
   * set qmake variables to tell qmake or QtCreator
+
 ```
    qmake -set OPENCV_INCPATH D:/opencv/build/include
    qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
 ```
 
   * using the third and forth param of add_opencv_modules()
+
 ```
 add_opencv_modules(core imgproc highgui, 2.4.3, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
 ```
+
 [Note that, more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
 
   * set project variable before call add_opencv_modules
+
 ```
 OPENCV_VERSION = 2.4.3
 OPENCV_INCPATH += D:/opencv/build/include
