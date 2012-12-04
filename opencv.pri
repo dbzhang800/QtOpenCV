@@ -36,18 +36,21 @@
 #   OPENCV_LIBPATH = D:/opencv/build/x86/vc10/lib  /home/debao/opencv/lib
 #   add_opencv_modules(core imgproc highgui)
 #
-#or set environment variables when call qmake.
+#or set environment variables before call qmake or QtCreator.
 #   set OPENCV_VERSION=2.4.3
 #   set OPENCV_INCPATH=D:/opencv/build/include
 #   set OPENCV_LIBPATH=D:/opencv/build/x86/vc10/lib
 #   qmake
 #   nmake
+#
+#or set qmake variables
+#   qmake -set OPENCV_INCPATH D:/opencv/build/include
+#   qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
 defineTest(add_opencv_modules) {
     isEmpty(2) {
-        isEmpty(OPENCV_VERSION) {
-            OPENCV_VERSION = $$(OPENCV_VERSION)
-            isEmpty($$OPENCV_VERSION):OPENCV_VERSION = 243
-        }
+        isEmpty(OPENCV_VERSION):OPENCV_VERSION = $$(OPENCV_VERSION)
+        isEmpty(OPENCV_VERSION):OPENCV_VERSION = $$[OPENCV_VERSION]
+        isEmpty(OPENCV_VERSION):OPENCV_VERSION = 243
     } else {
         OPENCV_VERSION = $$2
     }
@@ -65,11 +68,13 @@ defineTest(add_opencv_modules) {
 
     isEmpty(3) {
         isEmpty(OPENCV_INCPATH):OPENCV_INCPATH = $$(OPENCV_INCPATH)
+        isEmpty(OPENCV_INCPATH):OPENCV_INCPATH = $$[OPENCV_INCPATH]
     } else {
         OPENCV_INCPATH = $$3
     }
     isEmpty(4) {
         isEmpty(OPENCV_LIBPATH):OPENCV_LIBPATH = $$(OPENCV_LIBPATH)
+        isEmpty(OPENCV_LIBPATH):OPENCV_LIBPATH = $$[OPENCV_LIBPATH]
     } else {
         OPENCV_LIBPATH = $$4
     }

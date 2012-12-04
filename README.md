@@ -34,7 +34,39 @@ include (opencv.pri)
 add_opencv_modules(core imgproc highgui)
 ```
 
- * As the library name schame of OpenCV under windows is libopencv_XXXX243.dll.a or opencv_XXXX243{d}.lib, so version information must be provided. Default is 2.4.3
+ * If OpenCV2 doesn't installed in the standard directory, header files paths and library paths should be provided. There are more that four ways to do so.
+
+  * set system environment variables to tell qmake or QtCreator.
+```
+   set OPENCV_VERSION=2.4.3
+   set OPENCV_INCPATH=D:/opencv/build/include
+   set OPENCV_LIBPATH=D:/opencv/build/x86/vc10/lib
+   qmake
+```
+
+  * set qmake variables to tell qmake or QtCreator
+```
+   qmake -set OPENCV_INCPATH D:/opencv/build/include
+   qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
+```
+
+  * using the third and forth param of add_opencv_modules()
+```
+add_opencv_modules(core imgproc highgui, 2.4.3, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
+```
+[Note that, more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
+
+  * set project variable before call add_opencv_modules
+```
+OPENCV_VERSION = 2.4.3
+OPENCV_INCPATH += D:/opencv/build/include
+OPENCV_INCPATH += /home/debao/opencv/include
+OPENCV_LIBPATH = D:/opencv/build/x86/vc10/lib  /home/debao/opencv/lib
+add_opencv_modules(core imgproc highgui)
+```
+
+
+ * [Windows] As the library name schame of OpenCV under windows is `libopencv_XXXX243.dll.a` or `opencv_XXXX243{d}.lib`, so the version information must be provided. Default is 2.4.3
 
 ```
 add_opencv_modules(core imgproc highgui, 2.4.3)
@@ -47,28 +79,4 @@ OPENCV_VERSION = 2.4.3
 add_opencv_modules(core imgproc highgui)
 ```
 
- * If OpenCV2 doesn't installed in the standard directory, header files paths and library paths should be provided.[Note that, more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
-
-```
-add_opencv_modules(core imgproc highgui, 243, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
-```
-
-or
-
-```
-OPENCV_VERSION = 2.4.3
-OPENCV_INCPATH += D:/opencv/build/include
-OPENCV_INCPATH += /home/debao/opencv/include
-OPENCV_LIBPATH = D:/opencv/build/x86/vc10/lib  /home/debao/opencv/lib
-add_opencv_modules(core imgproc highgui)
-```
-
-or set environment variables when call qmake.
-
-```
-   set OPENCV_VERSION=2.4.3
-   set OPENCV_INCPATH=D:/opencv/build/include
-   set OPENCV_LIBPATH=D:/opencv/build/x86/vc10/lib
-   qmake
-   make
-```
+or set environment variable or qmake's variable if you don't want to touch the project files.
