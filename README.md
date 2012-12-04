@@ -4,6 +4,8 @@
 
  * QtOpenCV provides a opencv.pri file which can be used to integrate OpenCV2 to qmake-based project
 
+Note: OpenCV2.2 or newer is needed.
+
 ## cv::Mat <==> QImage
 
  * Copy cvmatandqimage{.cpp .h} to project's source tree.
