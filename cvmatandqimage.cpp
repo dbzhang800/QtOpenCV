@@ -37,7 +37,7 @@ namespace QtOcv {
  * - Execpted QImage format is QImage::Format_Indexed8, Format_RGB32, Format_RGB888, Format_ARGB32
  * - Depth of generated cv::Mat is CV_8U
  */
-cv::Mat image2Mat(const QImage &img, int mat_channels)
+cv::Mat image2Mat(const QImage &img, int mat_channels, RgbOrder rgbOrder)
 {
     Q_ASSERT(mat_channels == 0 || mat_channels == 1 || mat_channels == 3 || mat_channels == 4);
 
@@ -133,9 +133,8 @@ cv::Mat image2Mat(const QImage &img, int mat_channels)
  * Type of mat should be CV_8UC(n), CV_16UC(n), CV_32FC(n), where n is 1, 3, 4
  *
  * Format of QImage should be RGB32 RGB888 or Indexed8,
- * color channels of cv::Mat should stored in B G R order.
  */
-QImage mat2Image(const cv::Mat & mat, QImage::Format format)
+QImage mat2Image(const cv::Mat & mat, QImage::Format format, RgbOrder rgbOrder)
 {
     Q_ASSERT(mat.depth()==CV_8U || mat.depth()==CV_16U ||mat.depth()==CV_32F);
     Q_ASSERT(format == QImage::Format_RGB32 || format == QImage::Format_RGB888 || format == QImage::Format_Indexed8);
@@ -154,12 +153,15 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format)
 
     QImage outImage;
 
-    if (format == QImage::Format_RGB32) {
+    if (format == QImage::Format_RGB32 /*B G R X*/) {
         outImage = QImage(mat_b.cols, mat.rows, QImage::Format_RGB32);
+
+        if (mat_b.type() == CV_8UC4 && rgbOrder == RGBA)
+            cv::cvtColor(mat_b, mat_b, CV_RGBA2BGRA);
+
         for (int i=0; i<mat_b.rows; ++i) {
             uchar * data = outImage.scanLine(i);
             if (mat_b.type() == CV_8UC1) {
-
                 for (int j=0; j<mat_b.cols; ++j) {
                     *data++ = mat_b.at<uchar>(i, j);
                     *data++ = mat_b.at<uchar>(i, j);
@@ -167,18 +169,24 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format)
                     *data++ = 255;
                 }
             } else if (mat_b.type() == CV_8UC3) {
+                int first = rgbOrder == BGR ? 0 : 2;
+                int third = rgbOrder == BGR ? 2 : 0;
                 for (int j=0; j<mat_b.cols; ++j) {
-                    *data++ = mat_b.at<cv::Vec3b>(i, j)[0];
+                    *data++ = mat_b.at<cv::Vec3b>(i, j)[first];
                     *data++ = mat_b.at<cv::Vec3b>(i, j)[1];
-                    *data++ = mat_b.at<cv::Vec3b>(i, j)[2];
+                    *data++ = mat_b.at<cv::Vec3b>(i, j)[third];
                     *data++ = 255;
                 }
             } else if (mat_b.type() == CV_8UC4) {
                 std::memcpy(data, mat_b.row(i).data, mat_b.cols*4);
             }
         }
-    } else if (format == QImage::Format_RGB888){
+    } else if (format == QImage::Format_RGB888 /*R G B*/){
         outImage = QImage(mat_b.cols, mat.rows, QImage::Format_RGB888);
+
+        if (mat_b.type() == CV_8UC3 && rgbOrder == BGR)
+            cv::cvtColor(mat_b, mat_b, CV_BGR2RGB);
+
         for (int i=0; i<mat_b.rows; ++i) {
             uchar * data = outImage.scanLine(i);
             if (mat_b.type() == CV_8UC1) {
@@ -190,18 +198,20 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format)
             } else if (mat_b.type() == CV_8UC3) {
                 std::memcpy(data, mat_b.row(i).data, mat_b.cols*3);
             } else if (mat_b.type() == CV_8UC4) {
+                int first = rgbOrder == BGR ? 2 : 0;
+                int third = rgbOrder == BGR ? 0 : 2;
                 for (int j=0; j<mat_b.cols; ++j) {
-                    *data++ = mat_b.at<cv::Vec4b>(i, j)[0];
+                    *data++ = mat_b.at<cv::Vec4b>(i, j)[first];
                     *data++ = mat_b.at<cv::Vec4b>(i, j)[1];
-                    *data++ = mat_b.at<cv::Vec4b>(i, j)[2];
+                    *data++ = mat_b.at<cv::Vec4b>(i, j)[third];
                 }
             }
         }
     } else if (format == QImage::Format_Indexed8) {
         if (mat_b.type() == CV_8UC3)
-            cv::cvtColor(mat_b, mat_b, CV_BGR2GRAY, 1);
+            cv::cvtColor(mat_b, mat_b, rgbOrder == BGR ? CV_BGR2GRAY : CV_RGB2GRAY, 1);
         else if (mat_b.type() == CV_8UC4)
-            cv::cvtColor(mat_b, mat_b, CV_BGRA2GRAY, 1);
+            cv::cvtColor(mat_b, mat_b, rgbOrder == BGR ? CV_BGRA2GRAY : CV_RGBA2GRAY, 1);
 
         outImage = QImage(mat_b.cols, mat_b.rows, QImage::Format_Indexed8);
 
@@ -222,7 +232,7 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format)
 /* Convert QImage to cv::Mat without data copy
  *
  * - Supported QImage format is QImage::Format_Indexed8, Format_RGB888, Format_RGB32, Format_ARGB32
- * - Type of generated cv::Mat is CV_8UC1, CV_8UC3 (B G R), CV_8UC4 (B G R A),
+ * - Type of generated cv::Mat is CV_8UC1, CV_8UC3(R G B order), CV_8UC4 (B G R A order)
  */
 cv::Mat image2Mat_shared(const QImage &img)
 {
@@ -245,7 +255,7 @@ cv::Mat image2Mat_shared(const QImage &img)
 
 /* Convert  cv::Mat to QImage without data copy
  *
- * - Supported type of cv::Mat is CV_8UC1, CV_8UC3 (B G R), CV_8UC4 (B G R A)
+ * - Supported type of cv::Mat is CV_8UC1, CV_8UC3(R G B order), CV_8UC4 (B G R A order)
  * - QImage format is QImage::Format_Indexed8, Format_RGB888, Format_ARGB32
  */
 QImage mat2Image_shared(const cv::Mat &mat)
