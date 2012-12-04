@@ -66,14 +66,18 @@ defineTest(add_opencv_modules) {
         LIBS *= -l$$name
     }
 
+    win32:SEP = ;
+    else:SEP = :
     isEmpty(3) {
         isEmpty(OPENCV_INCPATH):OPENCV_INCPATH = $$(OPENCV_INCPATH)
+        OPENCV_INCPATH = $$split(OPENCV_INCPATH, $$SEP)
         isEmpty(OPENCV_INCPATH):OPENCV_INCPATH = $$[OPENCV_INCPATH]
     } else {
         OPENCV_INCPATH = $$3
     }
     isEmpty(4) {
         isEmpty(OPENCV_LIBPATH):OPENCV_LIBPATH = $$(OPENCV_LIBPATH)
+        OPENCV_LIBPATH = $$split(OPENCV_LIBPATH, $$SEP)
         isEmpty(OPENCV_LIBPATH):OPENCV_LIBPATH = $$[OPENCV_LIBPATH]
     } else {
         OPENCV_LIBPATH = $$4
