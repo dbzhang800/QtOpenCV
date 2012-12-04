@@ -33,7 +33,7 @@ namespace QtOcv {
 
 /* Convert QImage to cv::Mat
  *
- * - Supported dest mat channels is 0, 1, 3 (B G R), 4 (B G R A), where 0 means auto
+ * - Supported dest mat channels is 0, 1, 3, 4, where 0 means auto
  * - Execpted QImage format is QImage::Format_Indexed8, Format_RGB32, Format_RGB888, Format_ARGB32
  * - Depth of generated cv::Mat is CV_8U
  */
@@ -78,9 +78,12 @@ cv::Mat image2Mat(const QImage &img, int mat_channels, RgbOrder rgbOrder)
             const uchar * data = image.scanLine(i);
             if (image.format() == QImage::Format_Indexed8) {
                 std::memcpy(mat.row(i).data, data, img.width());
+            } else if (image.format() == QImage::Format_RGB888) {
+                for (int j=0; j<mat.cols; ++j, data+=3)
+                    mat.at<uchar>(i, j) = (data[0] * 3728 + data[1] * 19238 + data[2]*9798)/32768;
             } else {
-                for (int j=0; j<mat.cols; ++j, data+=image.depth()/8)
-                    mat.at<uchar>(i, j) = (*data * 3728 + *(data+1) * 19238 + *(data+2)*9798)/32768;
+                for (int j=0; j<mat.cols; ++j, data+=4)
+                    mat.at<uchar>(i, j) = (data[2] * 3728 + data[1] * 19238 + data[0]*9798)/32768;
             }
         }
     } else if (channels == 3) {
@@ -92,13 +95,21 @@ cv::Mat image2Mat(const QImage &img, int mat_channels, RgbOrder rgbOrder)
                     mat.at<cv::Vec3b>(i, j)[1] = *data;
                     mat.at<cv::Vec3b>(i, j)[2] = *data;
                 }
-            } else if (image.format() == QImage::Format_RGB888) {
+            } else if (image.format() == QImage::Format_RGB888 && rgbOrder == RGB) {
                 std::memcpy(mat.row(i).data, data, img.width()*3);
-            } else {
+            } else if (image.format() == QImage::Format_RGB888) { // BGR
                 for (int j=0; j<mat.cols; ++j, data+=4) {
-                    mat.at<cv::Vec3b>(i, j)[0] = data[0];
+                    mat.at<cv::Vec3b>(i, j)[2] = data[0];
                     mat.at<cv::Vec3b>(i, j)[1] = data[1];
-                    mat.at<cv::Vec3b>(i, j)[2] = data[2];
+                    mat.at<cv::Vec3b>(i, j)[0] = data[2];
+                }
+            } else {
+                int red = rgbOrder == BGR ? 2 : 0;
+                int blue = 2 - red;
+                for (int j=0; j<mat.cols; ++j, data+=4) {
+                    mat.at<cv::Vec3b>(i, j)[red] = data[0];
+                    mat.at<cv::Vec3b>(i, j)[1]   = data[1];
+                    mat.at<cv::Vec3b>(i, j)[blue] = data[2];
                 }
             }
         }
@@ -113,14 +124,23 @@ cv::Mat image2Mat(const QImage &img, int mat_channels, RgbOrder rgbOrder)
                     mat.at<cv::Vec4b>(i, j)[3] = 255;
                 }
             } else if (image.format() == QImage::Format_RGB888) {
+                int red = rgbOrder == BGRA ? 2 : 0;
+                int blue = 2 - red;
                 for (int j=0; j<mat.cols; ++j, data+=3) {
-                    mat.at<cv::Vec4b>(i, j)[0] = data[0];
+                    mat.at<cv::Vec4b>(i, j)[red] = data[0];
                     mat.at<cv::Vec4b>(i, j)[1] = data[1];
-                    mat.at<cv::Vec4b>(i, j)[2] = data[2];
+                    mat.at<cv::Vec4b>(i, j)[blue] = data[2];
                     mat.at<cv::Vec4b>(i, j)[3] = 255;
                 }
-            } else {
+            } else if (image.format() == QImage::Format_RGB32 && rgbOrder == BGRA){
                 std::memcpy(mat.row(i).data, data, img.width()*4);
+            } else {// RGBA
+                for (int j=0; j<mat.cols; ++j, data+=3) {
+                    mat.at<cv::Vec4b>(i, j)[2] = data[0];
+                    mat.at<cv::Vec4b>(i, j)[1] = data[1];
+                    mat.at<cv::Vec4b>(i, j)[0] = data[2];
+                    mat.at<cv::Vec4b>(i, j)[3] = data[3];
+                }
             }
         }
     }

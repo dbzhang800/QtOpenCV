@@ -159,12 +159,20 @@ void CvMatAndImageTest::testMat2QImageChannelsOrder()
 void CvMatAndImageTest::testQImage2Mat()
 {
     QImage img_rgb32 = QImage(100, 100, QImage::Format_RGB32);
-    img_rgb32.fill(QColor(2, 1, 255));
+    img_rgb32.fill(QColor(254, 1, 0));
 
     cv::Mat mat = image2Mat(img_rgb32);
     QCOMPARE (mat.type(), CV_8UC4);
 
     mat = image2Mat(img_rgb32, 1);
+    QCOMPARE (mat.type(), CV_8UC1);
+
+    QImage img_rgb888 = QImage(100, 100, QImage::Format_RGB888);
+    img_rgb888.fill(QColor(254, 1, 0));
+    mat = image2Mat(img_rgb888);
+    QCOMPARE (mat.type(), CV_8UC3);
+
+    mat = image2Mat(img_rgb888, 1);
     QCOMPARE (mat.type(), CV_8UC1);
 }
 
@@ -172,12 +180,12 @@ void CvMatAndImageTest::testQImage2Mat()
 void CvMatAndImageTest::testQImage2MatShared()
 {
     QImage img_rgb32 = QImage(100, 100, QImage::Format_RGB32);
-    img_rgb32.fill(QColor(2, 1, 255));
+    img_rgb32.fill(QColor(254, 1, 0));
     cv::Mat mat_8UC4 = image2Mat_shared(img_rgb32);
     QCOMPARE(mat_8UC4.type(), CV_8UC4);
 
     QImage img_rgb888 = QImage(100, 100, QImage::Format_RGB888);
-    img_rgb888.fill(QColor(2, 1, 255));
+    img_rgb888.fill(QColor(254, 1, 0));
     cv::Mat mat_8UC3 = image2Mat_shared(img_rgb888);
     QCOMPARE(mat_8UC3.type(), CV_8UC3);
 }
@@ -186,24 +194,19 @@ void CvMatAndImageTest::testQImage2MatChannelsOrder()
 {
     //This is a blue image
     QImage img_rgb32 = QImage(100, 100, QImage::Format_RGB32);
-    img_rgb32.fill(QColor(2, 1, 255));
+    img_rgb32.fill(QColor(254, 1, 0));
 
-    cv::Mat mat = image2Mat(img_rgb32);
+    cv::Mat mat = image2Mat(img_rgb32, 0, BGRA);
     QCOMPARE (mat.channels(), 4);
-    QCOMPARE (mat.at<cv::Vec4b>(50,50)[0], uchar(255));
-    QCOMPARE (mat.at<cv::Vec4b>(50,50)[2], uchar(2));
+    QCOMPARE (mat.at<cv::Vec4b>(50,50), cv::Vec4b(0,1,254,255));
 
-    const char * filename = "tst_data_testchannelsorder2.png";
-    img_rgb32.save(filename);
-    cv::Mat mat2 = cv::imread(filename);
-    QCOMPARE (mat2.channels(), 3);
-    QCOMPARE (mat2.at<cv::Vec3b>(50,50)[0], uchar(255));
-    QCOMPARE (mat2.at<cv::Vec3b>(50,50)[2], uchar(2));
+    mat = image2Mat(img_rgb32, 0, RGBA);
+    QCOMPARE (mat.channels(), 4);
+    QCOMPARE (mat.at<cv::Vec4b>(50,50), cv::Vec4b(254,1,0,255));
 
-//    cv::Mat mat3 = image2Mat_shared(img_rgb32);
-//    QCOMPARE (mat3.channels(), 4);
-//    QCOMPARE (mat3.at<cv::Vec4b>(50,50)[0], uchar(255));
-//    QCOMPARE (mat3.at<cv::Vec4b>(50,50)[2], uchar(2));
+    mat = image2Mat_shared(img_rgb32);
+    QCOMPARE (mat.channels(), 4);
+    QCOMPARE (mat.at<cv::Vec4b>(50,50), cv::Vec4b(0,1,254,255));
 }
 
 QTEST_MAIN(CvMatAndImageTest)

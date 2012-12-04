@@ -2,7 +2,6 @@
 #include <QString>
 #include <QtTest>
 #include <QImage>
-#include <QGuiApplication>
 #include <opencv2/core/core.hpp>
 
 using namespace QtOcv;
