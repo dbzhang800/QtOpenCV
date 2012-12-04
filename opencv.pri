@@ -45,8 +45,8 @@
 defineTest(add_opencv_modules) {
     isEmpty(2) {
         isEmpty(OPENCV_VERSION) {
-            !isEmpty($$(OPENCV_VERSION)):OPENCV_VERSION = $$(OPENCV_VERSION)
-            else:OPENCV_VERSION = 243
+            OPENCV_VERSION = $$(OPENCV_VERSION)
+            isEmpty($$OPENCV_VERSION):OPENCV_VERSION = 243
         }
     } else {
         OPENCV_VERSION = $$2
