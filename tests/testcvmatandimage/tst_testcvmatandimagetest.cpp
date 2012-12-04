@@ -27,8 +27,6 @@ private Q_SLOTS:
 
     void testMat2QImageShared();
     void testQImage2MatShared();
-
-    void testGrayQImage();
 };
 
 CvMatAndImageTest::CvMatAndImageTest()
@@ -182,24 +180,6 @@ void CvMatAndImageTest::testQImage2MatShared()
     img_rgb888.fill(QColor(2, 1, 255));
     cv::Mat mat_8UC3 = image2Mat_shared(img_rgb888);
     QCOMPARE(mat_8UC3.type(), CV_8UC3);
-}
-
-void CvMatAndImageTest::testGrayQImage()
-{
-    QImage outImage(512, 512, QImage::Format_Indexed8);
-
-    QVector<QRgb> colorTable;
-    for (int i=0; i<256; ++i)
-        colorTable.append(qRgb(i,i,i));
-    outImage.setColorTable(colorTable);
-
-    QString basename("tst_data_testGrayQImage");
-
-    outImage.save(basename+".bmp");
-    QCOMPARE(QImage(basename+".bmp").format(), QImage::Format_Indexed8);
-
-    outImage.save(basename+".tif");
-    QCOMPARE(QImage(basename+".tif").format(), QImage::Format_Indexed8);
 }
 
 QTEST_MAIN(CvMatAndImageTest)
