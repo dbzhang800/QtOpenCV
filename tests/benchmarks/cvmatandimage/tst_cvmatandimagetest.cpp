@@ -43,21 +43,9 @@ void CvmatandimageTest::testMatToImage()
     QFETCH(int, channels);
 
     const int width = 512;
-    cv::Mat mat_8UC1(width, width, CV_8UC1);
-    for (int i=0; i<width; ++i) {
-        for (int j=0; j<width; ++j)
-            mat_8UC1.at<uchar>(i,j) = (i*j)%255;
-    }
-    cv::Mat mat_8UC3;
-    std::vector<cv::Mat> channelVector;
-    channelVector.push_back(mat_8UC1);
-    channelVector.push_back(mat_8UC1);
-    channelVector.push_back(mat_8UC1);
-    cv::merge(channelVector, mat_8UC3);
-
-    cv::Mat mat_8UC4;
-    channelVector.push_back(cv::Mat(512, 512, CV_8UC1, cv::Scalar_<uchar>(128)));
-    cv::merge(channelVector, mat_8UC4);
+    cv::Mat mat_8UC1(width, width, CV_8UC1, 10);
+    cv::Mat mat_8UC3(width, width, CV_8UC3, cv::Scalar_<uchar>(10,20,30));
+    cv::Mat mat_8UC4(width, width, CV_8UC4, cv::Scalar_<uchar>(10,20,30,40));
 
     QImage img;
 
