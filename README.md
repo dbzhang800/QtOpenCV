@@ -4,7 +4,7 @@
 
  * QtOpenCV provides a opencv.pri file which can be used to integrate OpenCV2 to qmake-based project
 
-Note: OpenCV2.2 or newer is needed.
+ **Note: OpenCV2.2 or newer is needed.**
 
 ## cv::Mat <==> QImage
 
@@ -33,8 +33,8 @@ The manual of OpenCV says that,
 
 cv::imwrite()
 
-Only 8-bit (or16-bit unsigned(CV_16U) in case of PNG,JPEG
-2000,and TIFF) single-channel or 3-channel(with‘BGR’channelorder)images can be saved using this function.
+Only 8-bit (or 16-bit unsigned(CV_16U) in case of PNG,JPEG
+2000,and TIFF) single-channel or 3-channel(with‘BGR’channel order) images can be saved using this function.
 
 cv::imread()
 
@@ -58,10 +58,19 @@ In the case of color images, the decoded images will have the channels stored in
     ...
 ```
 
-### Swap r and b channel of QImage
+#### Swap r and b channel of QImage
 
 ```
     QImage QImage::rgbSwapped();
+```
+
+#### Common Image Data Range of OpenCV
+
+```
+    CV_8U   [0, 255]
+    CV_16U  [0, 255*256]
+    CV_32S  [0, 255*256]
+    CV_32F  [0.0, 1.0]
 ```
 
 ## OpenCV2 Integration
@@ -85,7 +94,7 @@ If OpenCV has been installed in the standard location all we need is
 
 If OpenCV2 doesn't installed in the standard directory, header files paths and library paths should be provided. There are more that four ways to do so.
 
- * set system environment variables to tell qmake or QtCreator.
+ * set system environment variables
 
 ```
    set OPENCV_VERSION=2.4.3
@@ -94,8 +103,7 @@ If OpenCV2 doesn't installed in the standard directory, header files paths and l
    qmake
 ```
 
- * set qmake's persistent property to tell qmake or QtCreator
-
+ * set qmake's persistent property
 ```
    qmake -set OPENCV_VERSION 2.4.3
    qmake -set OPENCV_INCPATH D:/opencv/build/include
