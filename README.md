@@ -13,14 +13,39 @@ Note: OpenCV2.2 or newer is needed.
 ```
 namespace QtOcv {
 
-cv::Mat image2Mat(const QImage &img, int channels = 0);
-QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_RGB32);
+//Standard convert
+cv::Mat image2Mat(const QImage &img, int channels = 0, RgbOrder rgbOrder = BGR);
+QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_RGB32, RgbOrder rgbOrder = BGR);
 
-//Convert without data copy
+//Convert without data copy. note that, RgbOrder of cv::Mat must be R G B (3 channels) or B G R A(4 channels)
 cv::Mat image2Mat_shared(const QImage &img);
 QImage mat2Image_shared(const cv::Mat &mat);
 
 } //namespace QtOcv
+```
+
+### Channels order of OpenCV
+**OpenCV normal using B G R channels order for cv::Mat Image**.
+
+The manual of OpenCV says that,
+
+cv::imwrite()
+
+Only 8-bit (or16-bit unsigned(CV_16U) in case of PNG,JPEG
+2000,and TIFF) single-channel or 3-channel(with‘BGR’channelorder)images can be saved using this function.
+
+cv::imread()
+
+In the case of color images, the decoded images will have the channels stored in  B G R order.
+
+### Data bytes order of QImage
+
+ * Little Endian
+
+```
+QImage::Format_RGB32  ==> B G R 255
+QImage::Format_ARGB32 ==> B G R A
+QImage::Format_RGB888 ==> R G B
 ```
 
 ## OpenCV2 Integration

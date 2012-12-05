@@ -25,6 +25,7 @@
 
 #include "cvmatandqimage.h"
 #include <QImage>
+#include <QSysInfo>
 #include <cstring>
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -39,6 +40,7 @@ namespace QtOcv {
  */
 cv::Mat image2Mat(const QImage &img, int mat_channels, RgbOrder rgbOrder)
 {
+    Q_ASSERT(QSysInfo::ByteOrder == QSysInfo::LittleEndian);
     Q_ASSERT(mat_channels == 0 || mat_channels == 1 || mat_channels == 3 || mat_channels == 4);
 
     if (mat_channels != 0 && mat_channels != 1 && mat_channels != 3 && mat_channels != 4)
@@ -95,21 +97,23 @@ cv::Mat image2Mat(const QImage &img, int mat_channels, RgbOrder rgbOrder)
                     mat.at<cv::Vec3b>(i, j)[1] = *data;
                     mat.at<cv::Vec3b>(i, j)[2] = *data;
                 }
-            } else if (image.format() == QImage::Format_RGB888 && rgbOrder == RGB) {
-                std::memcpy(mat.row(i).data, data, img.width()*3);
-            } else if (image.format() == QImage::Format_RGB888) { // BGR
-                for (int j=0; j<mat.cols; ++j, data+=4) {
-                    mat.at<cv::Vec3b>(i, j)[2] = data[0];
-                    mat.at<cv::Vec3b>(i, j)[1] = data[1];
-                    mat.at<cv::Vec3b>(i, j)[0] = data[2];
+            } else if (image.format() == QImage::Format_RGB888) {
+                if (rgbOrder == RGB) {
+                    std::memcpy(mat.row(i).data, data, img.width()*3);
+                } else if (image.format() == QImage::Format_RGB888) { // BGR
+                    for (int j=0; j<mat.cols; ++j, data+=3) {
+                        mat.at<cv::Vec3b>(i, j)[2] = data[0];
+                        mat.at<cv::Vec3b>(i, j)[1] = data[1];
+                        mat.at<cv::Vec3b>(i, j)[0] = data[2];
+                    }
                 }
-            } else {
+            } else { //QImage::Format_RGB32 || QImage::Format_ARGB32
                 int red = rgbOrder == BGR ? 2 : 0;
                 int blue = 2 - red;
                 for (int j=0; j<mat.cols; ++j, data+=4) {
-                    mat.at<cv::Vec3b>(i, j)[red] = data[0];
+                    mat.at<cv::Vec3b>(i, j)[blue] = data[0];
                     mat.at<cv::Vec3b>(i, j)[1]   = data[1];
-                    mat.at<cv::Vec3b>(i, j)[blue] = data[2];
+                    mat.at<cv::Vec3b>(i, j)[red] = data[2];
                 }
             }
         }
@@ -132,14 +136,16 @@ cv::Mat image2Mat(const QImage &img, int mat_channels, RgbOrder rgbOrder)
                     mat.at<cv::Vec4b>(i, j)[blue] = data[2];
                     mat.at<cv::Vec4b>(i, j)[3] = 255;
                 }
-            } else if (image.format() == QImage::Format_RGB32 && rgbOrder == BGRA){
-                std::memcpy(mat.row(i).data, data, img.width()*4);
-            } else {// RGBA
-                for (int j=0; j<mat.cols; ++j, data+=3) {
-                    mat.at<cv::Vec4b>(i, j)[2] = data[0];
-                    mat.at<cv::Vec4b>(i, j)[1] = data[1];
-                    mat.at<cv::Vec4b>(i, j)[0] = data[2];
-                    mat.at<cv::Vec4b>(i, j)[3] = data[3];
+            } else { //QImage::Format_RGB32 || QImage::Format_ARGB32
+                if (rgbOrder == BGRA) {
+                    std::memcpy(mat.row(i).data, data, img.width()*4);
+                } else {// RGBA
+                    for (int j=0; j<mat.cols; ++j, data+=4) {
+                        mat.at<cv::Vec4b>(i, j)[2] = data[0];
+                        mat.at<cv::Vec4b>(i, j)[1] = data[1];
+                        mat.at<cv::Vec4b>(i, j)[0] = data[2];
+                        mat.at<cv::Vec4b>(i, j)[3] = data[3];
+                    }
                 }
             }
         }
@@ -152,12 +158,13 @@ cv::Mat image2Mat(const QImage &img, int mat_channels, RgbOrder rgbOrder)
  *
  * Type of mat should be CV_8UC(n), CV_16UC(n), CV_32FC(n), where n is 1, 3, 4
  *
- * Format of QImage should be RGB32 RGB888 or Indexed8,
+ * Format of QImage should be ARGB32 RGB32 RGB888 or Indexed8,
  */
 QImage mat2Image(const cv::Mat & mat, QImage::Format format, RgbOrder rgbOrder)
 {
+    Q_ASSERT(QSysInfo::ByteOrder == QSysInfo::LittleEndian);
     Q_ASSERT(mat.depth()==CV_8U || mat.depth()==CV_16U ||mat.depth()==CV_32F);
-    Q_ASSERT(format == QImage::Format_RGB32 || format == QImage::Format_RGB888 || format == QImage::Format_Indexed8);
+    Q_ASSERT(format == QImage::Format_ARGB32 || format == QImage::Format_RGB32 || format == QImage::Format_RGB888 || format == QImage::Format_Indexed8);
 
     if (mat.empty())
         return QImage();
@@ -171,12 +178,10 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format, RgbOrder rgbOrder)
     else if (mat.depth() == CV_32F)
         mat.convertTo(mat_b, CV_8U, 255.);
 
-    QImage outImage;
+    QImage outImage(mat_b.cols, mat.rows, format);
 
-    if (format == QImage::Format_RGB32 /*B G R X*/) {
-        outImage = QImage(mat_b.cols, mat.rows, QImage::Format_RGB32);
-
-        if (mat_b.type() == CV_8UC4 && rgbOrder == RGBA)
+    if (format == QImage::Format_ARGB32 || format == QImage::Format_RGB32 /*B G R A*/) {
+        if (mat_b.type() == CV_8UC4 && rgbOrder == RGBA && format == QImage::Format_ARGB32)
             cv::cvtColor(mat_b, mat_b, CV_RGBA2BGRA);
 
         for (int i=0; i<mat_b.rows; ++i) {
@@ -189,21 +194,28 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format, RgbOrder rgbOrder)
                     *data++ = 255;
                 }
             } else if (mat_b.type() == CV_8UC3) {
-                int first = rgbOrder == BGR ? 0 : 2;
-                int third = rgbOrder == BGR ? 2 : 0;
+                int red = rgbOrder == BGR ? 2 : 0;
+                int blue = 2 - red;
                 for (int j=0; j<mat_b.cols; ++j) {
-                    *data++ = mat_b.at<cv::Vec3b>(i, j)[first];
+                    *data++ = mat_b.at<cv::Vec3b>(i, j)[blue];
                     *data++ = mat_b.at<cv::Vec3b>(i, j)[1];
-                    *data++ = mat_b.at<cv::Vec3b>(i, j)[third];
+                    *data++ = mat_b.at<cv::Vec3b>(i, j)[red];
                     *data++ = 255;
                 }
-            } else if (mat_b.type() == CV_8UC4) {
+            } else if (mat_b.type() == CV_8UC4 && format == QImage::Format_ARGB32) {
                 std::memcpy(data, mat_b.row(i).data, mat_b.cols*4);
+            } else { //CV_8UC4, QImage::Format_RGB32
+                int red = rgbOrder == BGR ? 2 : 0;
+                int blue = 2 - red;
+                for (int j=0; j<mat_b.cols; ++j) {
+                    *data++ = mat_b.at<cv::Vec4b>(i, j)[blue];
+                    *data++ = mat_b.at<cv::Vec4b>(i, j)[1];
+                    *data++ = mat_b.at<cv::Vec4b>(i, j)[red];
+                    *data++ = 255;
+                }
             }
         }
     } else if (format == QImage::Format_RGB888 /*R G B*/){
-        outImage = QImage(mat_b.cols, mat.rows, QImage::Format_RGB888);
-
         if (mat_b.type() == CV_8UC3 && rgbOrder == BGR)
             cv::cvtColor(mat_b, mat_b, CV_BGR2RGB);
 
@@ -218,12 +230,12 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format, RgbOrder rgbOrder)
             } else if (mat_b.type() == CV_8UC3) {
                 std::memcpy(data, mat_b.row(i).data, mat_b.cols*3);
             } else if (mat_b.type() == CV_8UC4) {
-                int first = rgbOrder == BGR ? 2 : 0;
-                int third = rgbOrder == BGR ? 0 : 2;
+                int red = rgbOrder == BGR ? 2 : 0;
+                int blue = 2 - red;
                 for (int j=0; j<mat_b.cols; ++j) {
-                    *data++ = mat_b.at<cv::Vec4b>(i, j)[first];
+                    *data++ = mat_b.at<cv::Vec4b>(i, j)[red];
                     *data++ = mat_b.at<cv::Vec4b>(i, j)[1];
-                    *data++ = mat_b.at<cv::Vec4b>(i, j)[third];
+                    *data++ = mat_b.at<cv::Vec4b>(i, j)[blue];
                 }
             }
         }
@@ -232,8 +244,6 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format, RgbOrder rgbOrder)
             cv::cvtColor(mat_b, mat_b, rgbOrder == BGR ? CV_BGR2GRAY : CV_RGB2GRAY, 1);
         else if (mat_b.type() == CV_8UC4)
             cv::cvtColor(mat_b, mat_b, rgbOrder == BGR ? CV_BGRA2GRAY : CV_RGBA2GRAY, 1);
-
-        outImage = QImage(mat_b.cols, mat_b.rows, QImage::Format_Indexed8);
 
         QVector<QRgb> colorTable;
         for (int i=0; i<256; ++i)
@@ -256,6 +266,7 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format, RgbOrder rgbOrder)
  */
 cv::Mat image2Mat_shared(const QImage &img)
 {
+    Q_ASSERT(QSysInfo::ByteOrder == QSysInfo::LittleEndian);
     Q_ASSERT(img.format() == QImage::Format_Indexed8 || img.format() == QImage::Format_RGB888
              || img.format() == QImage::Format_RGB32 || img.format() == QImage::Format_ARGB32);
 
@@ -280,6 +291,7 @@ cv::Mat image2Mat_shared(const QImage &img)
  */
 QImage mat2Image_shared(const cv::Mat &mat)
 {
+    Q_ASSERT(QSysInfo::ByteOrder == QSysInfo::LittleEndian);
     Q_ASSERT(mat.type() == CV_8UC1 || mat.type() == CV_8UC3 || mat.type() == CV_8UC4);
 
     if (mat.empty())
