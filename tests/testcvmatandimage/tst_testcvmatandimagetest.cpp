@@ -41,20 +41,21 @@ CvMatAndImageTest::CvMatAndImageTest()
 }
 
 void CvMatAndImageTest::testQImageDataBytesOrder()
-{   
+{       
     //Image data bytes order: R G B
     QImage redImage_rgb888(400, 300, QImage::Format_RGB888);
-    redImage_rgb888.fill(qRgb(254,1,0));
+    //redImage_rgb888.fill(qRgb(254,1,0)); Though works under Qt5, but not Qt4
+    redImage_rgb888.fill(QColor(254,1,0));
     QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage_rgb888.bits()), 6), QByteArray("\xfe\x01\x00\xfe\x01\x00", 6));
 
     //Image data bytes order: B G R X
     QImage redImage_rgb32(400, 300, QImage::Format_RGB32);
-    redImage_rgb32.fill(qRgb(254,1,0));
+    redImage_rgb32.fill(QColor(254,1,0));
     QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage_rgb32.bits()), 4), QByteArray("\x00\x01\xfe\xff", 4));
 
     //Image data bytes order: B G R A
     QImage redImage_argb32(400, 300, QImage::Format_ARGB32);
-    redImage_argb32.fill(qRgba(254,1,0, 128));
+    redImage_argb32.fill(QColor(254,1,0, 128));
     QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage_argb32.bits()), 4), QByteArray("\x00\x01\xfe\x80", 4));
 }
 
@@ -62,7 +63,7 @@ void CvMatAndImageTest::testMatChannelsOrder()
 {
     //generate a red-color image, then save as a png format image file
     QImage redImage(400, 300, QImage::Format_RGB888);
-    redImage.fill(qRgb(255,0,0)); // * R G B *
+    redImage.fill(QColor(255,0,0)); // * R G B *
     const char* redImage_filename = "tst_data_testchannelsorder.png";
     redImage.save(redImage_filename);
 
