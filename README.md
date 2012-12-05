@@ -8,7 +8,8 @@ Note: OpenCV2.2 or newer is needed.
 
 ## cv::Mat <==> QImage
 
- * Copy cvmatandqimage{.cpp .h} to project's source tree.
+ * Copy cvmatandqimage{.cpp .h} to your project's source tree.
+ * Then take advantage of follow api functions.
 
 ```
 namespace QtOcv {
@@ -24,8 +25,9 @@ QImage mat2Image_shared(const cv::Mat &mat);
 } //namespace QtOcv
 ```
 
-### Channels order of OpenCV
-**OpenCV normal using B G R channels order for cv::Mat Image**.
+### Some thing you need to know
+
+#### Channels order of OpenCV is `B G R`
 
 The manual of OpenCV says that,
 
@@ -38,20 +40,34 @@ cv::imread()
 
 In the case of color images, the decoded images will have the channels stored in  B G R order.
 
-### Data bytes order of QImage
+#### Data bytes order of QImage is `B G R A` and `R G B`
 
- * Little Endian
+ * For Little Endian System
 
 ```
-QImage::Format_RGB32  ==> B G R 255
-QImage::Format_ARGB32 ==> B G R A
-QImage::Format_RGB888 ==> R G B
+    QImage::Format_RGB32  ==> B G R 255
+    QImage::Format_ARGB32 ==> B G R A
+    QImage::Format_RGB888 ==> R G B
+```
+
+#### Swap channels in OpenCV 
+
+```
+    cv::cvtColor(mat, mat, CV_BGR2RGB)
+    cv::cvtColor(mat, mat, CV_BGRA2RGBA)
+    ...
+```
+
+### Swap r and b channel of QImage
+
+```
+    QImage QImage::rgbSwapped();
 ```
 
 ## OpenCV2 Integration
 
 ```
-add_opencv_modules(modules [, version [, includepaths [, librarypaths]]])
+    add_opencv_modules(modules [, version [, includepaths [, librarypaths]]])
 ```
 
 ### OpenCV installed in standard location
@@ -59,11 +75,11 @@ add_opencv_modules(modules [, version [, includepaths [, librarypaths]]])
 If OpenCV has been installed in the standard location all we need is
 
 ```
-include (opencv.pri)
-add_opencv_modules(core imgproc highgui)
+    include (opencv.pri)
+    add_opencv_modules(core imgproc highgui)
 ```
 
-[For windows user] if the header files have been put in `%QTDIR%/include/opencv2/` and libraries have been copied to `%QTDIR%/lib`, this can be thought standard too.
+[**For windows user**] If header files have been put in `%QTDIR%/include/opencv2/` and libraries have been copied to `%QTDIR%/lib`, this can be thought standard too.
 
 ### OpenCV install in non-standard location
 
@@ -78,9 +94,10 @@ If OpenCV2 doesn't installed in the standard directory, header files paths and l
    qmake
 ```
 
- * set qmake variables to tell qmake or QtCreator
+ * set qmake's persistent property to tell qmake or QtCreator
 
 ```
+   qmake -set OPENCV_VERSION 2.4.3
    qmake -set OPENCV_INCPATH D:/opencv/build/include
    qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
 ```
@@ -88,34 +105,36 @@ If OpenCV2 doesn't installed in the standard directory, header files paths and l
  * using the third and forth param of add_opencv_modules()
 
 ```
-add_opencv_modules(core imgproc highgui, 2.4.3, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
+    add_opencv_modules(core imgproc highgui, 2.4.3, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
 ```
 
-[Note that, more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
+[**Note that**, more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
 
  * set project variable before call add_opencv_modules
 
 ```
-OPENCV_VERSION = 2.4.3
-OPENCV_INCPATH += D:/opencv/build/include
-OPENCV_INCPATH += /home/debao/opencv/include
-OPENCV_LIBPATH = D:/opencv/build/x86/vc10/lib  /home/debao/opencv/lib
-add_opencv_modules(core imgproc highgui)
+    OPENCV_VERSION = 2.4.3
+    OPENCV_INCPATH += D:/opencv/build/include
+    OPENCV_INCPATH += /home/debao/opencv/include
+    OPENCV_LIBPATH = D:/opencv/build/x86/vc10/lib  /home/debao/opencv/lib
+    add_opencv_modules(core imgproc highgui)
 ```
 
 ### Why we need to provided the version information?
 
-[Windows] As the library name schame of OpenCV under windows is `libopencv_XXXX243.dll.a` or `opencv_XXXX243{d}.lib`, so the version information must be provided under Windows. Default is 2.4.3
+[**Windows only**]
+
+As the library name schame of OpenCV under windows is `libopencv_XXXX243.dll.a` or `opencv_XXXX243{d}.lib`, so the version information must be provided under Windows. Default is 2.4.3
 
 ```
-add_opencv_modules(core imgproc highgui, 2.4.3)
+    add_opencv_modules(core imgproc highgui, 2.4.3)
 ```
 
 or
 
 ```
-OPENCV_VERSION = 2.4.3
-add_opencv_modules(core imgproc highgui)
+    OPENCV_VERSION = 2.4.3
+    add_opencv_modules(core imgproc highgui)
 ```
 
 or set environment variable or qmake's variable if you don't want to touch the project files.

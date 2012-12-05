@@ -27,25 +27,26 @@
 #
 #   add_opencv_modules(core imgproc highgui)
 #
-#if the opencv library doesn't exists in standard location, you can special them
+#if the opencv library doesn't exists in standard location,
+#you can special them by environment variables
+#   set OPENCV_VERSION=2.4.3
+#   set OPENCV_INCPATH=D:/opencv/build/include
+#   set OPENCV_LIBPATH=D:/opencv/build/x86/vc10/lib
+#
+#or by qmake's persistent property
+#   qmake -set OPENCV_VERSION 2.4.3
+#   qmake -set OPENCV_INCPATH D:/opencv/build/include
+#   qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
+#
+#or taking advantage of the third and forth params of add_opencv_modules()
 #   add_opencv_modules(core imgproc highgui, 2.4.3, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
 #
-#or define three variables before calling this function
+#or defining project variables before calling add_opencv_modules()
 #   OPENCV_VERSION = 2.4.3
 #   OPENCV_INCPATH = D:/opencv/build/include  /home/debao/opencv/include
 #   OPENCV_LIBPATH = D:/opencv/build/x86/vc10/lib  /home/debao/opencv/lib
 #   add_opencv_modules(core imgproc highgui)
-#
-#or set environment variables before call qmake or QtCreator.
-#   set OPENCV_VERSION=2.4.3
-#   set OPENCV_INCPATH=D:/opencv/build/include
-#   set OPENCV_LIBPATH=D:/opencv/build/x86/vc10/lib
-#   qmake
-#   nmake
-#
-#or set qmake variables
-#   qmake -set OPENCV_INCPATH D:/opencv/build/include
-#   qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
+
 defineTest(add_opencv_modules) {
     isEmpty(2) {
         isEmpty(OPENCV_VERSION):OPENCV_VERSION = $$(OPENCV_VERSION)

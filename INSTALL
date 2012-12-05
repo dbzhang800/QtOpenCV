@@ -1,0 +1,17 @@
+Copy file to your project's source tree is enough. ^_^
+
+## Build examples
+
+Before compile the examples or unit tests, you must make sure that OpenCV 2.2 or newer has been installed in your computer.
+
+If the OpenCV has been installed to standard location, nothing special needed to do. Otherwise, you can to set environment variable or qmake's persistent property or ... 
+
+For example, setting qmake's persistent property is very easy. 
+
+```
+   qmake -set OPENCV_VERSION 2.4.3
+   qmake -set OPENCV_INCPATH D:/opencv/build/include
+   qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
+```
+
+More information can be found in README.md file.
