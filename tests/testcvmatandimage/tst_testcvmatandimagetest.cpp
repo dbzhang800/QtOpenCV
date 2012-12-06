@@ -97,7 +97,7 @@ void CvMatAndImageTest::testMat2QImage()
     }
 
     //CV_8UC1 to QImage::Format_Index8
-    QImage img1_index8 = mat2Image(mat_8UC1, QImage::Format_Indexed8);
+    QImage img1_index8 = mat2Image(mat_8UC1);
     QCOMPARE(img1_index8.pixelIndex(50,2), 100);
 
     //CV_8UC1 to QImage::Format_RGB32
