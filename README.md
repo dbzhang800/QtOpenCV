@@ -15,8 +15,8 @@
 namespace QtOcv {
 
 //Standard convert
-cv::Mat image2Mat(const QImage &img, int channels = 0, RgbOrder rgbOrder = BGR);
-QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_RGB32, RgbOrder rgbOrder = BGR);
+cv::Mat image2Mat(const QImage &img, int channels = 0, MatChannelOrder rgbOrder = BGR);
+QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_RGB32, MatChannelOrder rgbOrder = BGR);
 
 //Convert without data copy. note that, RgbOrder of cv::Mat must be R G B (3 channels) or B G R A(4 channels)
 cv::Mat image2Mat_shared(const QImage &img);

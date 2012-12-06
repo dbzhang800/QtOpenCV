@@ -10,7 +10,7 @@
 
 using namespace QtOcv;
 
-Q_DECLARE_METATYPE(RgbOrder)
+Q_DECLARE_METATYPE(MatChannelOrder)
 Q_DECLARE_METATYPE(QImage::Format)
 Q_DECLARE_METATYPE(cv::Vec4b)
 
@@ -113,7 +113,7 @@ void CvMatAndImageTest::testMat2QImage()
     QCOMPARE(img3_index8.pixelIndex(1,1), int(mat_8UC3_gray.at<uchar>(1,1)));
 
     //CV_8UC3 to QImage::Format_RGB32
-    QImage img3_rgb32 = mat2Image(mat_8UC3_bgr, QImage::Format_RGB32, BGR);
+    QImage img3_rgb32 = mat2Image(mat_8UC3_bgr, QImage::Format_RGB32, MCO_BGR);
     QCOMPARE(img3_rgb32.pixel(1,1), qRgb(254, 1, 0));
 }
 
@@ -155,34 +155,34 @@ void CvMatAndImageTest::testMat2QImageShared()
 void CvMatAndImageTest::testMat2QImageChannelsOrder_data()
 {
     QTest::addColumn<int>("channels");
-    QTest::addColumn<RgbOrder>("rgbOrder");
+    QTest::addColumn<MatChannelOrder>("rgbOrder");
     QTest::addColumn<QImage::Format>("format");
     QTest::addColumn<unsigned int>("expect");
 
-    QTest::newRow("C3_BGR ==> QImage::Format_ARGB32")<<3<<BGR<<QImage::Format_ARGB32<<qRgba(254,1,0,255);
-    QTest::newRow("C3_RGB ==> QImage::Format_ARGB32")<<3<<RGB<<QImage::Format_ARGB32<<qRgba(254,1,0,255);
-    QTest::newRow("C3_BGR ==> QImage::Format_RGB32")<<3<<BGR<<QImage::Format_RGB32<<qRgb(254,1,0);
-    QTest::newRow("C3_RGB ==> QImage::Format_RGB32")<<3<<RGB<<QImage::Format_RGB32<<qRgb(254,1,0);
-    QTest::newRow("C3_BGR ==> QImage::Format_RGB888")<<3<<BGR<<QImage::Format_RGB888<<qRgb(254,1,0);
-    QTest::newRow("C3_RGB ==> QImage::Format_RGB888")<<3<<RGB<<QImage::Format_RGB888<<qRgb(254,1,0);
+    QTest::newRow("C3_BGR ==> QImage::Format_ARGB32")<<3<<MCO_BGR<<QImage::Format_ARGB32<<qRgba(254,1,0,255);
+    QTest::newRow("C3_RGB ==> QImage::Format_ARGB32")<<3<<MCO_RGB<<QImage::Format_ARGB32<<qRgba(254,1,0,255);
+    QTest::newRow("C3_BGR ==> QImage::Format_RGB32")<<3<<MCO_BGR<<QImage::Format_RGB32<<qRgb(254,1,0);
+    QTest::newRow("C3_RGB ==> QImage::Format_RGB32")<<3<<MCO_RGB<<QImage::Format_RGB32<<qRgb(254,1,0);
+    QTest::newRow("C3_BGR ==> QImage::Format_RGB888")<<3<<MCO_BGR<<QImage::Format_RGB888<<qRgb(254,1,0);
+    QTest::newRow("C3_RGB ==> QImage::Format_RGB888")<<3<<MCO_RGB<<QImage::Format_RGB888<<qRgb(254,1,0);
 
-    QTest::newRow("C4_BGRA ==> QImage::Format_ARGB32")<<4<<BGR<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
-    QTest::newRow("C4_RGBA ==> QImage::Format_ARGB32")<<4<<RGB<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
-    QTest::newRow("C4_BGRA ==> QImage::Format_RGB32")<<4<<BGR<<QImage::Format_RGB32<<qRgb(254,1,0);
-    QTest::newRow("C4_RGBA ==> QImage::Format_RGB32")<<4<<RGB<<QImage::Format_RGB32<<qRgb(254,1,0);
-    QTest::newRow("C4_BGRA ==> QImage::Format_RGB888")<<4<<BGR<<QImage::Format_RGB888<<qRgb(254,1,0);
-    QTest::newRow("C4_RGBA ==> QImage::Format_RGB888")<<4<<RGB<<QImage::Format_RGB888<<qRgb(254,1,0);
+    QTest::newRow("C4_BGRA ==> QImage::Format_ARGB32")<<4<<MCO_BGR<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
+    QTest::newRow("C4_RGBA ==> QImage::Format_ARGB32")<<4<<MCO_RGB<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
+    QTest::newRow("C4_BGRA ==> QImage::Format_RGB32")<<4<<MCO_BGR<<QImage::Format_RGB32<<qRgb(254,1,0);
+    QTest::newRow("C4_RGBA ==> QImage::Format_RGB32")<<4<<MCO_RGB<<QImage::Format_RGB32<<qRgb(254,1,0);
+    QTest::newRow("C4_BGRA ==> QImage::Format_RGB888")<<4<<MCO_BGR<<QImage::Format_RGB888<<qRgb(254,1,0);
+    QTest::newRow("C4_RGBA ==> QImage::Format_RGB888")<<4<<MCO_RGB<<QImage::Format_RGB888<<qRgb(254,1,0);
 }
 
 void CvMatAndImageTest::testMat2QImageChannelsOrder()
 {
     QFETCH(int, channels);
-    QFETCH(RgbOrder, rgbOrder);
+    QFETCH(MatChannelOrder, rgbOrder);
     QFETCH(QImage::Format, format);
     QFETCH(unsigned int, expect);
 
     //This is a red image, when channles is 4, the alpha is 128.
-    const cv::Mat mat(400, 300, CV_8UC(channels), rgbOrder == BGR ? cv::Scalar_<uchar>(0, 1, 254, 128) : cv::Scalar_<uchar>(254, 1, 0, 128));
+    const cv::Mat mat(400, 300, CV_8UC(channels), rgbOrder == MCO_BGR ? cv::Scalar_<uchar>(0, 1, 254, 128) : cv::Scalar_<uchar>(254, 1, 0, 128));
 
     QImage image = mat2Image(mat, format, rgbOrder);
     QCOMPARE(image.pixel(1,1), expect);
@@ -241,29 +241,29 @@ void CvMatAndImageTest::testQImage2MatShared()
 void CvMatAndImageTest::testQImage2MatChannelsOrder_data()
 {
     QTest::addColumn<int>("channels");
-    QTest::addColumn<RgbOrder>("rgbOrder");
+    QTest::addColumn<MatChannelOrder>("rgbOrder");
     QTest::addColumn<QImage::Format>("format");
     QTest::addColumn<unsigned int>("fillValue");
 
-    QTest::newRow("QImage::Format_ARGB32 ==> C3_BGR")<<3<<BGR<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
-    QTest::newRow("QImage::Format_ARGB32 ==> C3_RGB")<<3<<RGB<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
-    QTest::newRow("QImage::Format_ARGB32 ==> C4_BGRA")<<4<<BGR<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
-    QTest::newRow("QImage::Format_ARGB32 ==> C4_RGBA")<<4<<RGB<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
+    QTest::newRow("QImage::Format_ARGB32 ==> C3_BGR")<<3<<MCO_BGR<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
+    QTest::newRow("QImage::Format_ARGB32 ==> C3_RGB")<<3<<MCO_RGB<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
+    QTest::newRow("QImage::Format_ARGB32 ==> C4_BGRA")<<4<<MCO_BGR<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
+    QTest::newRow("QImage::Format_ARGB32 ==> C4_RGBA")<<4<<MCO_RGB<<QImage::Format_ARGB32<<qRgba(254,1,0,128);
 
-    QTest::newRow("QImage::Format_RGB32 ==> C3_BGR")<<3<<BGR<<QImage::Format_RGB32<<qRgb(254,1,0);
-    QTest::newRow("QImage::Format_RGB32 ==> C3_RGB")<<3<<RGB<<QImage::Format_RGB32<<qRgb(254,1,0);
-    QTest::newRow("QImage::Format_RGB32 ==> C4_BGRA")<<4<<BGR<<QImage::Format_RGB32<<qRgb(254,1,0);
-    QTest::newRow("QImage::Format_RGB32 ==> C4_RGBA")<<4<<RGB<<QImage::Format_RGB32<<qRgb(254,1,0);
+    QTest::newRow("QImage::Format_RGB32 ==> C3_BGR")<<3<<MCO_BGR<<QImage::Format_RGB32<<qRgb(254,1,0);
+    QTest::newRow("QImage::Format_RGB32 ==> C3_RGB")<<3<<MCO_RGB<<QImage::Format_RGB32<<qRgb(254,1,0);
+    QTest::newRow("QImage::Format_RGB32 ==> C4_BGRA")<<4<<MCO_BGR<<QImage::Format_RGB32<<qRgb(254,1,0);
+    QTest::newRow("QImage::Format_RGB32 ==> C4_RGBA")<<4<<MCO_RGB<<QImage::Format_RGB32<<qRgb(254,1,0);
 
-    QTest::newRow("QImage::Format_RGB888 ==> C3_BGR")<<3<<BGR<<QImage::Format_RGB888<<qRgb(254,1,0);
-    QTest::newRow("QImage::Format_RGB888 ==> C3_RGB")<<3<<RGB<<QImage::Format_RGB888<<qRgb(254,1,0);
-    QTest::newRow("QImage::Format_RGB888 ==> C4_BGRA")<<4<<BGR<<QImage::Format_RGB888<<qRgb(254,1,0);
-    QTest::newRow("QImage::Format_RGB888 ==> C4_RGBA")<<4<<RGB<<QImage::Format_RGB888<<qRgb(254,1,0);
+    QTest::newRow("QImage::Format_RGB888 ==> C3_BGR")<<3<<MCO_BGR<<QImage::Format_RGB888<<qRgb(254,1,0);
+    QTest::newRow("QImage::Format_RGB888 ==> C3_RGB")<<3<<MCO_RGB<<QImage::Format_RGB888<<qRgb(254,1,0);
+    QTest::newRow("QImage::Format_RGB888 ==> C4_BGRA")<<4<<MCO_BGR<<QImage::Format_RGB888<<qRgb(254,1,0);
+    QTest::newRow("QImage::Format_RGB888 ==> C4_RGBA")<<4<<MCO_RGB<<QImage::Format_RGB888<<qRgb(254,1,0);
 }
 
 void CvMatAndImageTest::testQImage2MatChannelsOrder(){
     QFETCH(int, channels);
-    QFETCH(RgbOrder, rgbOrder);
+    QFETCH(MatChannelOrder, rgbOrder);
     QFETCH(QImage::Format, format);
     QFETCH(unsigned int, fillValue);
 
@@ -279,12 +279,12 @@ void CvMatAndImageTest::testQImage2MatChannelsOrder(){
     QCOMPARE (mat.channels(), channels);
 
     if (channels == 3) {
-        QCOMPARE(mat.at<cv::Vec3b>(1,1), rgbOrder==BGR ? cv::Vec3b(0,1,254): cv::Vec3b(254,1,0));
+        QCOMPARE(mat.at<cv::Vec3b>(1,1), rgbOrder==MCO_BGR ? cv::Vec3b(0,1,254): cv::Vec3b(254,1,0));
     } else if (channels == 4) {
         int alpha = format == QImage::Format_ARGB32 ? 128 : 255;
         QCOMPARE(mat.at<cv::Vec4b>(1,1)[3], uchar(alpha));
 
-        QCOMPARE(mat.at<cv::Vec4b>(1,1), rgbOrder==BGR ? cv::Vec4b(0,1,254,alpha):cv::Vec4b(254,1,0,alpha));
+        QCOMPARE(mat.at<cv::Vec4b>(1,1), rgbOrder==MCO_BGR ? cv::Vec4b(0,1,254,alpha):cv::Vec4b(254,1,0,alpha));
     }
 }
 
