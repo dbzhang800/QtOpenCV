@@ -198,7 +198,7 @@ void CvMatAndImageTest::testQImage2Mat()
     QCOMPARE(mat.type(), CV_8UC4);
     QCOMPARE(mat.at<cv::Vec4b>(1,1), cv::Vec4b(0,1,254,255));
 
-    mat = image2Mat(img_rgb32, 1);
+    mat = image2Mat(img_rgb32, CV_8UC1);
     QCOMPARE(mat.type(), CV_8UC1);
 
     QImage img_rgb888 = QImage(100, 100, QImage::Format_RGB888);
@@ -209,7 +209,7 @@ void CvMatAndImageTest::testQImage2Mat()
     QCOMPARE(mat.type(), CV_8UC3);
     QCOMPARE(mat.at<cv::Vec3b>(1,1), cv::Vec3b(0,1,254));
 
-    mat = image2Mat(img_rgb888, 1);
+    mat = image2Mat(img_rgb888, CV_8UC1);
     QCOMPARE(mat.type(), CV_8UC1);
 }
 
@@ -275,10 +275,14 @@ void CvMatAndImageTest::testQImage2MatChannelsOrder(){
     //img.fill(QColor(fillValue)); //This won't work, as it equals c.setRgb(fillValue);
 
 
-    cv::Mat mat = image2Mat(img, channels, rgbOrder);
+    cv::Mat mat = image2Mat(img, CV_8UC(channels), rgbOrder);
     QCOMPARE (mat.channels(), channels);
 
     if (channels == 3) {
+        qDebug()<<cv::saturate_cast<uchar>(uchar(0)*0.0);
+        qDebug()<<cv::saturate_cast<uchar>(uchar(1)*1.0);
+        qDebug()<<cv::saturate_cast<uchar>(uchar(254)*1.0);
+        qDebug()<<mat.at<cv::Vec3b>(1,1)[0]<<mat.at<cv::Vec3b>(1,1)[1]<<mat.at<cv::Vec3b>(1,1)[2];
         QCOMPARE(mat.at<cv::Vec3b>(1,1), rgbOrder==MCO_BGR ? cv::Vec3b(0,1,254): cv::Vec3b(254,1,0));
     } else if (channels == 4) {
         int alpha = format == QImage::Format_ARGB32 ? 128 : 255;

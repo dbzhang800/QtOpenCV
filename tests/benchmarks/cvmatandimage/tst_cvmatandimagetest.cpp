@@ -1,31 +1,123 @@
-#include "cvmatandqimage.h"
+#include "../../../cvmatandqimage.cpp"
 #include <QString>
 #include <QtTest>
 #include <QImage>
+#include <QDebug>
 #include <opencv2/core/core.hpp>
 
 using namespace QtOcv;
 
-class CvmatandimageTest : public QObject
+class CvMatAndImageTest : public QObject
 {
     Q_OBJECT
     
 public:
-    CvmatandimageTest();
+    CvMatAndImageTest();
     
 private Q_SLOTS:
+    void mat2ImageTemplateUChar_data();
+    void mat2ImageTemplateUChar();
+    void mat2ImageTemplateFloat_data();
+    void mat2ImageTemplateFloat();
+
+    void image2MatTemplateUChar_data();
+    void image2MatTemplateUChar();
+    /*
     void testMatToImage_data();
     void testMatToImage();
 
     void testImageToMat_data();
     void testImageToMat();
+    */
 };
 
-CvmatandimageTest::CvmatandimageTest()
+CvMatAndImageTest::CvMatAndImageTest()
 {
 }
 
-void CvmatandimageTest::testMatToImage_data()
+void CvMatAndImageTest::mat2ImageTemplateUChar_data()
+{
+    QTest::addColumn<bool>("useTemplate");
+
+    QTest::newRow("Template Version")<<true;
+    QTest::newRow("Normal Version")<<false;
+}
+
+void CvMatAndImageTest::mat2ImageTemplateUChar()
+{
+    QFETCH(bool, useTemplate);
+
+    cv::Size2i size(4096, 4096);
+    const int channel = 3;
+    cv::Mat mat(size, CV_8UC(channel), cv::Scalar_<uchar>(254, 1, 0, 128));
+
+    QImage img;
+    if (useTemplate) {
+        QBENCHMARK {
+            img = mat2Image_<uchar>(mat, QImage::Format_ARGB32, QtOcv::MCO_BGRA, 1.0);
+        }
+    } else {
+        QBENCHMARK {
+            img = mat2Image(mat, QImage::Format_ARGB32, QtOcv::MCO_BGRA);
+        }
+    }
+}
+
+void CvMatAndImageTest::mat2ImageTemplateFloat_data()
+{
+    QTest::addColumn<bool>("useTemplate");
+
+    QTest::newRow("Template Version")<<true;
+    QTest::newRow("Normal Version")<<false;
+}
+
+void CvMatAndImageTest::mat2ImageTemplateFloat()
+{
+    QFETCH(bool, useTemplate);
+
+    cv::Size2i size(2048, 2048);
+    cv::Mat mat(size, CV_32FC4, cv::Scalar_<float>(0.9f, 0.1f, 0.0f, 0.5f));
+
+    QImage img;
+    if (useTemplate) {
+        QBENCHMARK {
+            img = mat2Image_<float>(mat, QImage::Format_ARGB32, QtOcv::MCO_BGRA, 255.);
+        }
+    } else {
+        QBENCHMARK {
+            mat.convertTo(mat, CV_8U, 255.);
+            img = mat2Image(mat, QImage::Format_ARGB32, QtOcv::MCO_BGRA);
+        }
+    }
+}
+
+void CvMatAndImageTest::image2MatTemplateUChar_data()
+{
+    QTest::addColumn<bool>("useTemplate");
+
+    QTest::newRow("Template Version")<<true;
+    QTest::newRow("Normal Version")<<false;
+}
+
+void CvMatAndImageTest::image2MatTemplateUChar()
+{
+    QFETCH(bool, useTemplate);
+
+    QImage image(2048, 2048, QImage::Format_RGB888);
+
+    if (useTemplate) {
+        QBENCHMARK {
+            cv::Mat mat = image2Mat_<uchar>(image, CV_8UC4, QtOcv::MCO_BGR, 1.0);
+        }
+    } else {
+        QBENCHMARK {
+            cv::Mat mat = image2Mat(image, CV_8UC4, QtOcv::MCO_BGR);
+        }
+    }
+}
+
+/*
+void CvMatAndImageTest::testMatToImage_data()
 {
     QTest::addColumn<bool>("useShared");
     QTest::addColumn<int>("channels");
@@ -37,7 +129,7 @@ void CvmatandimageTest::testMatToImage_data()
     QTest::newRow("standard convert:RGB32") << false << 4;
 }
 
-void CvmatandimageTest::testMatToImage()
+void CvMatAndImageTest::testMatToImage()
 {
     QFETCH(bool, useShared);
     QFETCH(int, channels);
@@ -80,7 +172,7 @@ void CvmatandimageTest::testMatToImage()
     }
 }
 
-void CvmatandimageTest::testImageToMat_data()
+void CvMatAndImageTest::testImageToMat_data()
 {
     QTest::addColumn<bool>("useShared");
     QTest::addColumn<int>("channels");
@@ -92,7 +184,7 @@ void CvmatandimageTest::testImageToMat_data()
     QTest::newRow("standard convert:RGB32") << false << 4;
 }
 
-void CvmatandimageTest::testImageToMat()
+void CvMatAndImageTest::testImageToMat()
 {
     QFETCH(bool, useShared);
     QFETCH(int, channels);
@@ -132,7 +224,7 @@ void CvmatandimageTest::testImageToMat()
         }
     }
 }
-
-QTEST_MAIN(CvmatandimageTest)
+*/
+QTEST_MAIN(CvMatAndImageTest)
 
 #include "tst_cvmatandimagetest.moc"
