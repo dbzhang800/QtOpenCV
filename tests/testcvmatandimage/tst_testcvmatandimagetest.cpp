@@ -61,20 +61,31 @@ void CvMatAndImageTest::testQImageDataBytesOrder()
 
 void CvMatAndImageTest::testMatChannelsOrder()
 {
+    //(1)
     //generate a red-color image, then save as a png format image file
     QImage redImage(400, 300, QImage::Format_RGB888);
-    redImage.fill(QColor(255,0,0)); // * R G B *
-    const char* redImage_filename = "tst_data_testchannelsorder.png";
+    redImage.fill(QColor(254,1,0)); // * R G B *
+    const char* redImage_filename = "tst_data_testchannelsorder1.png";
     redImage.save(redImage_filename);
 
     //load this image with highgui's method, note that the order is B G R instead of R G B
     cv::Mat redMat = cv::imread(redImage_filename);
     QVERIFY(redMat.channels() == 3);
-    QCOMPARE(redMat.at<cv::Vec3b>(1,1), cv::Vec3b(0,0,255)); // * B G R *
-    QCOMPARE(redMat.at<cv::Vec3b>(1,1)[2], uchar(255));
+    QCOMPARE(redMat.at<cv::Vec3b>(1,1), cv::Vec3b(0,1,254)); // * B G R *
+    QCOMPARE(redMat.at<cv::Vec3b>(1,1)[2], uchar(254));
 
-    QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage.bits()), 6), QByteArray("\xff\x00\x00\xff\x00\x00", 6));
-    QCOMPARE(QByteArray(reinterpret_cast<char*>(redMat.data),     6), QByteArray("\x00\x00\xff\x00\x00\xff", 6));
+    QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage.bits()), 6), QByteArray("\xfe\x01\x00\xfe\x01\x00", 6));
+    QCOMPARE(QByteArray(reinterpret_cast<char*>(redMat.data),     6), QByteArray("\x00\x01\xfe\x00\x01\xfe", 6));
+
+    //(2)
+    //generate a B G R A OpenCV Image, then save as a png format image file
+    const char* alphaImage_filename = "tst_data_testchannelsorder2.png";
+    cv::Mat alphaMat(400, 300, CV_8UC4, cv::Scalar_<uchar>(0,1,254,128));
+    cv::imwrite(alphaImage_filename, alphaMat);
+
+    QImage alphaImage(alphaImage_filename);
+    QCOMPARE(alphaImage.format(), QImage::Format_ARGB32);
+    QCOMPARE(alphaImage.pixel(1,1), qRgba(254,1,0,128));
 }
 
 void CvMatAndImageTest::testMat2QImage()

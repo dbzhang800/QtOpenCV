@@ -27,18 +27,22 @@ QImage mat2Image_shared(const cv::Mat &mat);
 
 ### Some thing you need to know
 
-#### Channels order of OpenCV is `B G R`
+#### Channels order of OpenCV's image which used by highgui module is `B G R` and `B G R A`
 
 The manual of OpenCV says that,
 
-cv::imwrite()
+* cv::imwrite()
 
 Only 8-bit (or 16-bit unsigned(CV_16U) in case of PNG,JPEG
-2000,and TIFF) single-channel or 3-channel(with‘BGR’channel order) images can be saved using this function.
+2000,and TIFF) single-channel or **3-channel(with‘BGR’channel order)** images can be saved using this function.
 
-cv::imread()
+It is possible to store PNG images with an alpha channel using this function. To do this, create 8-bit (or 16-bit) **4-chanel image BGRA**, where the alpha channel goes last.
 
-In the case of color images, the decoded images will have the channels stored in  B G R order.
+* cv::imread()
+
+In the case of color images, the decoded images will have the **channels stored in  B G R order** .
+
+**Note:** If you don't care opencv_highgui module, you can always use the same channels order as QImage.
 
 #### Data bytes order of QImage is `B G R A` and `R G B`
 
@@ -47,6 +51,14 @@ In the case of color images, the decoded images will have the channels stored in
 ```
     QImage::Format_RGB32  ==> B G R 255
     QImage::Format_ARGB32 ==> B G R A
+    QImage::Format_RGB888 ==> R G B
+```
+
+ * For Big Endian System (doesn't support yet)
+
+```
+    QImage::Format_RGB32  ==> 255 R G B
+    QImage::Format_ARGB32 ==> A R G B
     QImage::Format_RGB888 ==> R G B
 ```
 
@@ -88,7 +100,7 @@ If OpenCV has been installed in the standard location all we need is
     add_opencv_modules(core imgproc highgui)
 ```
 
-[**For windows user**] If header files have been put in `%QTDIR%/include/opencv2/` and libraries have been copied to `%QTDIR%/lib`, this can be thought standard too.
+[ **For windows user** ] If header files have been put in `%QTDIR%/include/opencv2/` and libraries have been copied to `%QTDIR%/lib`, this can be thought standard too.
 
 ### OpenCV install in non-standard location
 
@@ -116,7 +128,7 @@ If OpenCV2 doesn't installed in the standard directory, header files paths and l
     add_opencv_modules(core imgproc highgui, 2.4.3, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
 ```
 
-[**Note that**, more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
+[ **Note that** , more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
 
  * set project variable before call add_opencv_modules
 
@@ -130,7 +142,7 @@ If OpenCV2 doesn't installed in the standard directory, header files paths and l
 
 ### Why we need to provided the version information?
 
-[**Windows only**]
+[ **Windows only** ]
 
 As the library name schame of OpenCV under windows is `libopencv_XXXX243.dll.a` or `opencv_XXXX243{d}.lib`, so the version information must be provided under Windows. Default is 2.4.3
 
