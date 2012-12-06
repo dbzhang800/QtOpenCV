@@ -35,7 +35,6 @@ namespace QtOcv {
 /* Convert QImage to cv::Mat
  *
  * - Supported dest mat channels is 0, 1, 3, 4, where 0 means auto select based one QImage's format
- * - Execpted QImage format is QImage::Format_Indexed8, Format_RGB32, Format_RGB888, Format_ARGB32
  * - Depth of generated cv::Mat is CV_8U
  */
 cv::Mat image2Mat(const QImage &img, int mat_channels, MatChannelOrder matRgbOrder)
@@ -156,9 +155,8 @@ cv::Mat image2Mat(const QImage &img, int mat_channels, MatChannelOrder matRgbOrd
 
 /* Convert cv::Mat to QImage
  *
- * Type of mat should be CV_8UC(n), CV_16UC(n), CV_32FC(n), where n is 1, 3, 4
- *
- * Format of QImage should be ARGB32 RGB32 RGB888 Indexed8 or Invalid(means auto selection),
+ * Channels of cv::Mat should be 1, 3, 4
+ * Format of QImage should be ARGB32,RGB32,RGB888,Indexed8 or Invalid(means auto selection),
  */
 QImage mat2Image(const cv::Mat & mat, QImage::Format format, MatChannelOrder matRgbOrder)
 {
