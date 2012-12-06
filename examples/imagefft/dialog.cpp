@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <QPixmap>
 #include <QImage>
+#include <QDebug>
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "cvmatandqimage.h"
@@ -87,13 +88,15 @@ void Dialog::onOpenButtonClicked()
 
     ui->label->setPixmap(QPixmap::fromImage(img));
 
-    cv::Mat mat = QtOcv::image2Mat(img, 1);
+    cv::Mat mat = QtOcv::image2Mat(img, CV_8UC1);
     cv::Mat out_mat;
     calcFFT(mat, out_mat);
 
     QLabel *fftLabel = new QLabel;
     fftLabel->setWindowTitle(tr("FFT result window"));
     fftLabel->setAttribute(Qt::WA_DeleteOnClose);
-    fftLabel->setPixmap(QPixmap::fromImage(QtOcv::mat2Image_shared(out_mat)));
+    QImage out_img = QtOcv::mat2Image_shared(out_mat);
+    qDebug()<<out_img.size()<<out_mat.cols<<out_mat.rows;
+    fftLabel->setPixmap(QPixmap::fromImage(out_img));
     fftLabel->show();
 }
