@@ -44,9 +44,9 @@ In the case of color images, the decoded images will have the **channels stored 
 
 **Note:** If you don't care opencv_highgui module, you can always use the same channels order as QImage.
 
-#### Data bytes order of QImage is `B G R A` and `R G B`
+#### Data bytes order of QImage is `B G R A`(little endian) `A R G B`(big endian) and `R G B`
 
- * For Little Endian System
+ * In Little Endian System
 
 ```
     QImage::Format_RGB32  ==> B G R 255
@@ -54,7 +54,7 @@ In the case of color images, the decoded images will have the **channels stored 
     QImage::Format_RGB888 ==> R G B
 ```
 
- * For Big Endian System (doesn't support yet)
+ * Ins Big Endian System
 
 ```
     QImage::Format_RGB32  ==> 255 R G B
@@ -62,7 +62,9 @@ In the case of color images, the decoded images will have the **channels stored 
     QImage::Format_RGB888 ==> R G B
 ```
 
-#### Swap channels in OpenCV 
+#### How to swap channels?
+
+ * In OpenCV 
 
 ```
     cv::cvtColor(mat, mat, CV_BGR2RGB)
@@ -70,7 +72,7 @@ In the case of color images, the decoded images will have the **channels stored 
     ...
 ```
 
-#### Swap r and b channel of QImage
+ * In Qt, swap r and b channel of QImage
 
 ```
     QImage QImage::rgbSwapped();

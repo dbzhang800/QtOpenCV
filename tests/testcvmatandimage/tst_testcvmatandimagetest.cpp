@@ -48,15 +48,17 @@ void CvMatAndImageTest::testQImageDataBytesOrder()
     redImage_rgb888.fill(QColor(254,1,0));
     QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage_rgb888.bits()), 6), QByteArray("\xfe\x01\x00\xfe\x01\x00", 6));
 
-    //Image data bytes order: B G R X
+    //Image data bytes order: B G R X(little endian) or X R G B(big endian)
     QImage redImage_rgb32(400, 300, QImage::Format_RGB32);
     redImage_rgb32.fill(QColor(254,1,0));
-    QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage_rgb32.bits()), 4), QByteArray("\x00\x01\xfe\xff", 4));
+    QByteArray target = (QSysInfo::ByteOrder == QSysInfo::LittleEndian) ? QByteArray("\x00\x01\xfe\xff", 4) : QByteArray("\xff\xfe\x01\x00", 4);
+    QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage_rgb32.bits()), 4), target);
 
-    //Image data bytes order: B G R A
+    //Image data bytes order: B G R A(little endian) or A R G B(big endian)
     QImage redImage_argb32(400, 300, QImage::Format_ARGB32);
     redImage_argb32.fill(QColor(254,1,0, 128));
-    QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage_argb32.bits()), 4), QByteArray("\x00\x01\xfe\x80", 4));
+    QByteArray target2 = (QSysInfo::ByteOrder == QSysInfo::LittleEndian) ? QByteArray("\x00\x01\xfe\x80", 4) : QByteArray("\x80\xfe\x01\x00", 4);
+    QCOMPARE(QByteArray(reinterpret_cast<char*>(redImage_argb32.bits()), 4), target2);
 }
 
 void CvMatAndImageTest::testMatChannelsOrder()
@@ -142,14 +144,16 @@ void CvMatAndImageTest::testMat2QImageShared()
     QCOMPARE(img1_rgb888.format(), QImage::Format_RGB888);
     QCOMPARE(img1_rgb888.pixel(3, 50), qRgb(150, 150, 150));
 
-    //CV_8UC4(B G R A) share data with QImage::Format_ARGB32
-    cv::Mat mat_8UC4;
-    channels.push_back(cv::Mat(100, 200, CV_8UC1, cv::Scalar_<uchar>(128)));
-    cv::merge(channels, mat_8UC4);
+    if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
+        //CV_8UC4(B G R A) share data with QImage::Format_ARGB32
+        cv::Mat mat_8UC4;
+        channels.push_back(cv::Mat(100, 200, CV_8UC1, cv::Scalar_<uchar>(128)));
+        cv::merge(channels, mat_8UC4);
 
-    QImage img1_argb32 = mat2Image_shared(mat_8UC4);
-    QCOMPARE(img1_argb32.format(), QImage::Format_ARGB32);
-    QCOMPARE(img1_argb32.pixel(3, 50), qRgba(150, 150, 150, 128));
+        QImage img1_argb32 = mat2Image_shared(mat_8UC4);
+        QCOMPARE(img1_argb32.format(), QImage::Format_ARGB32);
+        QCOMPARE(img1_argb32.pixel(3, 50), qRgba(150, 150, 150, 128));
+    }
 }
 
 void CvMatAndImageTest::testMat2QImageChannelsOrder_data()
@@ -216,19 +220,25 @@ void CvMatAndImageTest::testQImage2Mat()
 
 void CvMatAndImageTest::testQImage2MatShared()
 {
-    //QImage::Format_RGB32 share data with CV_8UC4(B G R 255)
+    //QImage::Format_RGB32 share data with CV_8UC4(B G R 255, little endian system)
+    //or CV_8UC4(255 R G B, big endian system)
     QImage img_rgb32 = QImage(100, 100, QImage::Format_RGB32);
     img_rgb32.fill(QColor(254, 1, 0));
     cv::Mat mat_8UC4 = image2Mat_shared(img_rgb32);
     QCOMPARE(mat_8UC4.type(), CV_8UC4);
-    QCOMPARE(mat_8UC4.at<cv::Vec4b>(1,1), cv::Vec4b(0,1,254,255));
+    cv::Vec4b target = (QSysInfo::ByteOrder == QSysInfo::LittleEndian) ? cv::Vec4b(0,1,254,255) :
+                                                                         cv::Vec4b(255,254,1,0);
+    QCOMPARE(mat_8UC4.at<cv::Vec4b>(1,1), target);
 
-    //QImage::Format_ARGB32 share data with CV_8UC4(B G R A)
+    //QImage::Format_ARGB32 share data with CV_8UC4(B G R A, little endian system)
+    //or CV_8UC4(A R G B, big endian system)
     QImage img_argb32 = QImage(100, 100, QImage::Format_ARGB32);
     img_argb32.fill(QColor(254, 1, 0, 128));
     mat_8UC4 = image2Mat_shared(img_argb32);
     QCOMPARE(mat_8UC4.type(), CV_8UC4);
-    QCOMPARE(mat_8UC4.at<cv::Vec4b>(1,1), cv::Vec4b(0,1,254,128));
+    cv::Vec4b target2 = (QSysInfo::ByteOrder == QSysInfo::LittleEndian) ? cv::Vec4b(0,1,254,128) :
+                                                                         cv::Vec4b(128,254,1,0);
+    QCOMPARE(mat_8UC4.at<cv::Vec4b>(1,1), target2);
 
     //QImage::Format_RGB888 share data with CV_8UC3(R G B)
     QImage img_rgb888 = QImage(100, 100, QImage::Format_RGB888);

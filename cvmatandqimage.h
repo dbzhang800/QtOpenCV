@@ -47,7 +47,8 @@ enum MatChannelOrder
 cv::Mat image2Mat(const QImage &img, int matType = CV_8UC(0), MatChannelOrder matRgbOrder = MCO_BGR);
 QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_Invalid, MatChannelOrder matRgbOrder = MCO_BGR);
 
-//Convert without data copy. MatChannelOrder should be R G B (3 channels) or B G R A(4 channels)
+//Convert without data copy. MatChannelOrder should be R G B (3 channels) ,B G R A(4 channels in little endian system)
+//or A R G B (4 channels in big endian system)
 cv::Mat image2Mat_shared(const QImage &img);
 QImage mat2Image_shared(const cv::Mat &mat);
 
