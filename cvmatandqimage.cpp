@@ -163,7 +163,7 @@ cv::Mat image2Mat(const QImage &img, int mat_channels, MatChannelOrder matRgbOrd
 QImage mat2Image(const cv::Mat & mat, QImage::Format format, MatChannelOrder matRgbOrder)
 {
     Q_ASSERT(QSysInfo::ByteOrder == QSysInfo::LittleEndian);
-    Q_ASSERT(mat.depth()==CV_8U || mat.depth()==CV_16U ||mat.depth()==CV_32F);
+    //Q_ASSERT(mat.depth()==CV_8U || mat.depth()==CV_16U ||mat.depth()==CV_32F);
     Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
     Q_ASSERT(format == QImage::Format_ARGB32 || format == QImage::Format_RGB32 \
              || format == QImage::Format_RGB888 || format == QImage::Format_Indexed8 \
@@ -176,9 +176,9 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format, MatChannelOrder mat
 
     if (mat.depth() == CV_8U)
         mat_b = mat;
-    else if (mat.depth() == CV_16U)
+    else if (mat.depth() == CV_16U || mat.depth() == CV_32S )
         mat.convertTo(mat_b, CV_8U, 255./65535.);
-    else if (mat.depth() == CV_32F)
+    else if (mat.depth() == CV_32F || mat.depth() == CV_64F)
         mat.convertTo(mat_b, CV_8U, 255.);
 
     if (format == QImage::Format_Invalid) {
