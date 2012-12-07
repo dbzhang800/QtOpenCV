@@ -15,108 +15,17 @@ public:
     CvMatAndImageTest();
     
 private Q_SLOTS:
-    void mat2ImageTemplateUChar_data();
-    void mat2ImageTemplateUChar();
-    void mat2ImageTemplateFloat_data();
-    void mat2ImageTemplateFloat();
-
-    void image2MatTemplateUChar_data();
-    void image2MatTemplateUChar();
-    /*
     void testMatToImage_data();
     void testMatToImage();
 
     void testImageToMat_data();
     void testImageToMat();
-    */
 };
 
 CvMatAndImageTest::CvMatAndImageTest()
 {
 }
 
-void CvMatAndImageTest::mat2ImageTemplateUChar_data()
-{
-    QTest::addColumn<bool>("useTemplate");
-
-    QTest::newRow("Template Version")<<true;
-    QTest::newRow("Normal Version")<<false;
-}
-
-void CvMatAndImageTest::mat2ImageTemplateUChar()
-{
-    QFETCH(bool, useTemplate);
-
-    cv::Size2i size(4096, 4096);
-    const int channel = 3;
-    cv::Mat mat(size, CV_8UC(channel), cv::Scalar_<uchar>(254, 1, 0, 128));
-
-    QImage img;
-    if (useTemplate) {
-        QBENCHMARK {
-            img = mat2Image_<uchar>(mat, QImage::Format_ARGB32, QtOcv::MCO_BGRA, 1.0);
-        }
-    } else {
-        QBENCHMARK {
-            img = mat2Image(mat, QImage::Format_ARGB32, QtOcv::MCO_BGRA);
-        }
-    }
-}
-
-void CvMatAndImageTest::mat2ImageTemplateFloat_data()
-{
-    QTest::addColumn<bool>("useTemplate");
-
-    QTest::newRow("Template Version")<<true;
-    QTest::newRow("Normal Version")<<false;
-}
-
-void CvMatAndImageTest::mat2ImageTemplateFloat()
-{
-    QFETCH(bool, useTemplate);
-
-    cv::Size2i size(2048, 2048);
-    cv::Mat mat(size, CV_32FC4, cv::Scalar_<float>(0.9f, 0.1f, 0.0f, 0.5f));
-
-    QImage img;
-    if (useTemplate) {
-        QBENCHMARK {
-            img = mat2Image_<float>(mat, QImage::Format_ARGB32, QtOcv::MCO_BGRA, 255.);
-        }
-    } else {
-        QBENCHMARK {
-            mat.convertTo(mat, CV_8U, 255.);
-            img = mat2Image(mat, QImage::Format_ARGB32, QtOcv::MCO_BGRA);
-        }
-    }
-}
-
-void CvMatAndImageTest::image2MatTemplateUChar_data()
-{
-    QTest::addColumn<bool>("useTemplate");
-
-    QTest::newRow("Template Version")<<true;
-    QTest::newRow("Normal Version")<<false;
-}
-
-void CvMatAndImageTest::image2MatTemplateUChar()
-{
-    QFETCH(bool, useTemplate);
-
-    QImage image(2048, 2048, QImage::Format_RGB888);
-
-    if (useTemplate) {
-        QBENCHMARK {
-            cv::Mat mat = image2Mat_<uchar>(image, CV_8UC4, QtOcv::MCO_BGR, 1.0);
-        }
-    } else {
-        QBENCHMARK {
-            cv::Mat mat = image2Mat(image, CV_8UC4, QtOcv::MCO_BGR);
-        }
-    }
-}
-
-/*
 void CvMatAndImageTest::testMatToImage_data()
 {
     QTest::addColumn<bool>("useShared");
@@ -134,7 +43,7 @@ void CvMatAndImageTest::testMatToImage()
     QFETCH(bool, useShared);
     QFETCH(int, channels);
 
-    const int width = 512;
+    const int width = 2048;
     cv::Mat mat_8UC1(width, width, CV_8UC1, 10);
     cv::Mat mat_8UC3(width, width, CV_8UC3, cv::Scalar_<uchar>(10,20,30));
     cv::Mat mat_8UC4(width, width, CV_8UC4, cv::Scalar_<uchar>(10,20,30,40));
@@ -148,11 +57,11 @@ void CvMatAndImageTest::testMatToImage()
             }
         } else if (channels == 3) {
             QBENCHMARK {
-                img = mat2Image(mat_8UC3, QImage::Format_RGB888);
+                img = mat2Image(mat_8UC3, QImage::Format_RGB888, MCO_RGB);
             }
         } else {
             QBENCHMARK {
-                img = mat2Image(mat_8UC4, QImage::Format_RGB32);
+                img = mat2Image(mat_8UC4, QImage::Format_RGB32, MCO_BGRA);
             }
         }
     } else {
@@ -189,9 +98,10 @@ void CvMatAndImageTest::testImageToMat()
     QFETCH(bool, useShared);
     QFETCH(int, channels);
 
-    QImage index8 = QImage(512, 512, QImage::Format_Indexed8);
-    QImage rgb888 = QImage(512, 512, QImage::Format_RGB888);
-    QImage rgb32 = QImage(512, 512, QImage::Format_RGB32);
+    const int w = 2048;
+    QImage index8 = QImage(w, w, QImage::Format_Indexed8);
+    QImage rgb888 = QImage(w, w, QImage::Format_RGB888);
+    QImage rgb32 = QImage(w, w, QImage::Format_RGB32);
 
     cv::Mat mat;
     if (!useShared) {
@@ -224,7 +134,7 @@ void CvMatAndImageTest::testImageToMat()
         }
     }
 }
-*/
+
 QTEST_MAIN(CvMatAndImageTest)
 
 #include "tst_cvmatandimagetest.moc"
