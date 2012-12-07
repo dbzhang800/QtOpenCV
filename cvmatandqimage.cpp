@@ -38,8 +38,7 @@ QImage mat2Image_(const cv::Mat & mat, QImage::Format format, QtOcv::MatChannelO
 {
     Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
     Q_ASSERT(format == QImage::Format_ARGB32 || format == QImage::Format_RGB32 \
-             || format == QImage::Format_RGB888 || format == QImage::Format_Indexed8 \
-             || format == QImage::Format_Invalid);
+             || format == QImage::Format_RGB888 || format == QImage::Format_Indexed8);
 
     QImage outImage(mat.cols, mat.rows, format);
     const int mat_channels = mat.channels();
@@ -131,8 +130,7 @@ QImage mat2Image_<uchar>(const cv::Mat & mat, QImage::Format format, QtOcv::MatC
 {
     Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
     Q_ASSERT(format == QImage::Format_ARGB32 || format == QImage::Format_RGB32 \
-             || format == QImage::Format_RGB888 || format == QImage::Format_Indexed8 \
-             || format == QImage::Format_Invalid);
+             || format == QImage::Format_RGB888 || format == QImage::Format_Indexed8);
 
     QImage outImage(mat.cols, mat.rows, format);
     const int mat_channels = mat.channels();
@@ -381,7 +379,6 @@ namespace QtOcv {
 /* Convert QImage to cv::Mat
  *
  * - Supported mat channels are 0, 1, 3, 4,  where 0 means selecting based on QImage's format
- * - Depth of generated cv::Mat is CV_8U
  */
 cv::Mat image2Mat(const QImage &img, int matType, MatChannelOrder matRgbOrder)
 {

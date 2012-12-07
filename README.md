@@ -9,20 +9,23 @@
 ## cv::Mat <==> QImage
 
  * Copy cvmatandqimage{.cpp .h} to your project's source tree.
- * Then take advantage of follow api functions.
+ * Then take advantage of follow api functions to converting data between Cv::Mat ```C1 C3(RGB) C3(BGR) C4(RGBA) C4(BGRA)``` and QImage ```  Indexed8 RGB888 RGB32  ARGB32```
 
 ```
-namespace QtOcv {
+    namespace QtOcv {
+        cv::Mat image2Mat(const QImage &img, int channels = 0, MatChannelOrder rgbOrder = MCO_BGR);
+        QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_Invalid, MatChannelOrder rgbOrder = MCO_BGR);
+    } //namespace QtOcv
+```
 
-//Standard convert
-cv::Mat image2Mat(const QImage &img, int channels = 0, MatChannelOrder rgbOrder = BGR);
-QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_Invalid, MatChannelOrder rgbOrder = BGR);
+ * In addition, two other functions are provided which works more efficient when operating on `CV_8UC1`、`CV_8UC3`(R G B)、`CV_8UC4`(A R G B or B G R A depending on system endian)
 
-//Convert without data copy. note that, RgbOrder of cv::Mat must be R G B (3 channels) or B G R A(4 channels)
-cv::Mat image2Mat_shared(const QImage &img);
-QImage mat2Image_shared(const cv::Mat &mat);
-
-} //namespace QtOcv
+```
+    namespace QtOcv {
+    //Convert without data copy. note that, RgbOrder of cv::Mat must be R G B (3 channels) or B G R A(4 channels)
+    cv::Mat image2Mat_shared(const QImage &img);
+    QImage mat2Image_shared(const cv::Mat &mat);
+    } //namespace QtOcv
 ```
 
 ### Some thing you need to know
