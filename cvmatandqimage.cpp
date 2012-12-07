@@ -232,11 +232,11 @@ cv::Mat image2Mat_(const QImage &image, int matType, QtOcv::MatChannelOrder matR
                     mat.at<T>(i, j) = *data * scaleFactor;
             } else if (image.format() == QImage::Format_RGB888) {
                 for (int j=0; j<mat.cols; ++j, data+=3)
-                    mat.at<T>(i, j) = cv::saturate_cast<T>((data[0] * 3728 + data[1] * 19238 + data[2]*9798)/32768 * scaleFactor);
+                    mat.at<T>(i, j) = cv::saturate_cast<T>((data[0] * 0.299 + data[1] * 0.587 + data[2]*0.114) * scaleFactor);
             } else {
                 const quint32 * d = reinterpret_cast<const quint32*>(data);
                 for (int j=0; j<mat.cols; ++j, d++)
-                    mat.at<T>(i, j) = cv::saturate_cast<T>((qRed(*d) * 3728 + qGreen(*d) * 19238 + qBlue(*d)*9798)/32768 * scaleFactor);
+                    mat.at<T>(i, j) = cv::saturate_cast<T>((qRed(*d) * 0.299 + qGreen(*d) * 0.587 + qBlue(*d)*0.114) * scaleFactor);
             }
         }
     } else if (channels == 3) {
@@ -318,11 +318,11 @@ cv::Mat image2Mat_<uchar>(const QImage &image, int matType, QtOcv::MatChannelOrd
                 std::memcpy(mat.row(i).data, data, image.width());
             } else if (image.format() == QImage::Format_RGB888) {
                 for (int j=0; j<mat.cols; ++j, data+=3)
-                    mat.at<uchar>(i, j) = (data[0] * 3728 + data[1] * 19238 + data[2]*9798)/32768;
+                    mat.at<uchar>(i, j) = (data[0] * 9798 + data[1] * 19238 + data[2]*3728)/32768;
             } else {
                 const quint32 * d = reinterpret_cast<const quint32*>(data);
                 for (int j=0; j<mat.cols; ++j, d++)
-                    mat.at<uchar>(i, j) = (qRed(*d) * 3728 + qGreen(*d) * 19238 + qBlue(*d)*9798)/32768;
+                    mat.at<uchar>(i, j) = (qRed(*d) * 9798 + qGreen(*d) * 19238 + qBlue(*d)*3728)/32768;
             }
         }
     } else if (channels == 3) {
