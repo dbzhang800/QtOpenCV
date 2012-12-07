@@ -9,10 +9,9 @@
 #include "cvmatandqimage.h"
 
 namespace {
-void calcFFT(const cv::Mat &input_8UC1, cv::Mat &output_8UC1)
+
+void calcFFT(const cv::Mat &input, cv::Mat &output)
 {
-    cv::Mat input;
-    input_8UC1.convertTo(input, CV_32F, 1.0/255.0);
     cv::Mat padded;                            //expand input image to optimal size
     int m = cv::getOptimalDFTSize( input.rows );
     int n = cv::getOptimalDFTSize( input.cols ); // on the border add zero values
@@ -28,7 +27,7 @@ void calcFFT(const cv::Mat &input_8UC1, cv::Mat &output_8UC1)
     // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
     cv::split(complexI, planes);                   // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
     cv::magnitude(planes[0], planes[1], planes[0]);// planes[0] = magnitude
-    cv::Mat output = planes[0];
+    output = planes[0];
 
     output += cv::Scalar_<float>::all(1);                    // switch to logarithmic scale
     cv::log(output, output);
@@ -56,8 +55,6 @@ void calcFFT(const cv::Mat &input_8UC1, cv::Mat &output_8UC1)
 
     cv::normalize(output, output, 0, 1, CV_MINMAX); // Transform the matrix with float values into a
                                             // viewable image form (float between values 0 and 1).
-
-    output.convertTo(output_8UC1, CV_8U, 255);
     return;
 }
 } //namespace
@@ -88,15 +85,14 @@ void Dialog::onOpenButtonClicked()
 
     ui->label->setPixmap(QPixmap::fromImage(img));
 
-    cv::Mat mat = QtOcv::image2Mat(img, CV_8UC1);
+    cv::Mat mat = QtOcv::image2Mat(img, CV_32FC1);
     cv::Mat out_mat;
     calcFFT(mat, out_mat);
 
     QLabel *fftLabel = new QLabel;
     fftLabel->setWindowTitle(tr("FFT result window"));
     fftLabel->setAttribute(Qt::WA_DeleteOnClose);
-    QImage out_img = QtOcv::mat2Image_shared(out_mat);
-    qDebug()<<out_img.size()<<out_mat.cols<<out_mat.rows;
+    QImage out_img = QtOcv::mat2Image(out_mat);
     fftLabel->setPixmap(QPixmap::fromImage(out_img));
     fftLabel->show();
 }
