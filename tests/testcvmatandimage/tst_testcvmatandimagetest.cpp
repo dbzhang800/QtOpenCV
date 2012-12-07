@@ -64,7 +64,7 @@ static bool lenientCompare(const cv::Mat &actual, const cv::Mat &expected)
         return false;
     }
 
-    double threshold = 1.0e-3;
+    double threshold = 2.0e-2;
 
     std::vector<cv::Mat> actualPlanes(actual.channels());
     std::vector<cv::Mat> expectedPlanes(expected.channels());
@@ -217,16 +217,16 @@ void CvMatAndImageTest::testMat2QImage()
     QCOMPARE(img3_rgb32.pixel(1,1), qRgb(254, 1, 0));
 
     cv::Mat mat_16UC3_bgr;
-    mat_8UC3_bgr.convertTo(mat_16UC3_bgr, CV_16UC3, 255.0);
+    mat_8UC3_bgr.convertTo(mat_16UC3_bgr, CV_16UC3, 65535.0/255.0);
     QImage img3_16UC3_rgb32 = mat2Image(mat_16UC3_bgr, QImage::Format_RGB32, MCO_BGR);
 
-    lenientCompare(img3_rgb32, img3_16UC3_rgb32);
+    QVERIFY(lenientCompare(img3_rgb32, img3_16UC3_rgb32));
 
     cv::Mat mat_32FC3_bgr;
     mat_8UC3_bgr.convertTo(mat_32FC3_bgr, CV_32FC3, 1.0/255.0);
     QImage img3_32FC3_rgb32 = mat2Image(mat_32FC3_bgr, QImage::Format_RGB32, MCO_BGR);
 
-    lenientCompare(img3_rgb32, img3_32FC3_rgb32);
+    QVERIFY(lenientCompare(img3_rgb32, img3_32FC3_rgb32));
 }
 
 void CvMatAndImageTest::testMat2QImageShared()
@@ -264,6 +264,16 @@ void CvMatAndImageTest::testMat2QImageShared()
         QCOMPARE(img1_argb32.format(), QImage::Format_ARGB32);
         QCOMPARE(img1_argb32.pixel(3, 50), qRgba(150, 150, 150, 128));
     }
+
+    cv::Size2i size(4096, 4096);
+    const int channel = 3;
+    cv::Mat mat_rgb(size, CV_32FC(channel), cv::Scalar_<float>(0.9f, 0.01f, 0.0f, 0.5f));
+
+    QImage img0 = mat2Image(mat_rgb, QImage::Format_RGB888, QtOcv::MCO_RGB);
+    mat_rgb.convertTo(mat_rgb, CV_8UC(channel), 255);
+    QImage img1 = mat2Image_shared(mat_rgb);
+
+    QVERIFY(lenientCompare(img0, img1));
 }
 
 void CvMatAndImageTest::testMat2QImageChannelsOrder_data()
@@ -497,14 +507,14 @@ void CvMatAndImageTest::testQImage2MatChannelsOrder(){
     cv::Mat mat_16U_expected;
     mat.convertTo(mat_16U_expected, CV_16U, 65535.0/255.0);
 
-    lenientCompare<unsigned short>(mat_16U, mat_16U_expected);
+    QVERIFY(lenientCompare<unsigned short>(mat_16U, mat_16U_expected));
 
     //(3) CV_32F
     cv::Mat mat_32F = image2Mat(img, CV_32FC(channels), rgbOrder);
     cv::Mat mat_32F_expected;
     mat.convertTo(mat_32F_expected, CV_32F, 1.0/255.0);
 
-    lenientCompare<float>(mat_32F, mat_32F_expected);
+    QVERIFY(lenientCompare<float>(mat_32F, mat_32F_expected));
 }
 
 QTEST_MAIN(CvMatAndImageTest)
