@@ -231,16 +231,12 @@ cv::Mat image2Mat_(const QImage &image, int matType, QtOcv::MatChannelOrder matR
                 for (int j=0; j<mat.cols; ++j)
                     mat.at<T>(i, j) = *data * scaleFactor;
             } else if (image.format() == QImage::Format_RGB888) {
-                for (int j=0; j<mat.cols; ++j, data+=3) {
-                    uchar val = static_cast<uchar>((data[0] * 3728 + data[1] * 19238 + data[2]*9798)/32768);
-                    mat.at<T>(i, j) = val * scaleFactor;
-                }
+                for (int j=0; j<mat.cols; ++j, data+=3)
+                    mat.at<T>(i, j) = cv::saturate_cast<T>((data[0] * 3728 + data[1] * 19238 + data[2]*9798)/32768 * scaleFactor);
             } else {
                 const quint32 * d = reinterpret_cast<const quint32*>(data);
-                for (int j=0; j<mat.cols; ++j, d++) {
-                    uchar val = static_cast<uchar>((qRed(*d) * 3728 + qGreen(*d) * 19238 + qBlue(*d)*9798)/32768);
-                    mat.at<uchar>(i, j) = val * scaleFactor;
-                }
+                for (int j=0; j<mat.cols; ++j, d++)
+                    mat.at<T>(i, j) = cv::saturate_cast<T>((qRed(*d) * 3728 + qGreen(*d) * 19238 + qBlue(*d)*9798)/32768 * scaleFactor);
             }
         }
     } else if (channels == 3) {
