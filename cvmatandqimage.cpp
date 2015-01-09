@@ -488,15 +488,20 @@ QImage mat2Image(const cv::Mat & mat, QImage::Format format, MatChannelOrder mat
 
 /* Convert QImage to cv::Mat without data copy
  *
- * - Supported QImage format is QImage::Format_Indexed8, Format_RGB888, Format_RGB32, Format_ARGB32
- * - Type of generated cv::Mat is CV_8UC1, CV_8UC3(R G B order), CV_8UC4 (B G R A order in little endian system)
- *   or CV_8UC4(A R G B order in big endian system)
+ * - Supported QImage format are:
+ *   - QImage::Format_Indexed8 ==> CV_8UC1
+ *   - QImage::Format_RGB888   ==> CV_8UC3 (R G B)
+ *   - QImage::Format_RGB32    ==> CV_8UC4 (A R G B or B G R A)
+ *   - QImage::Format_ARGB32   ==> CV_8UC4 (A R G B or B G R A)
+ *   - QImage::Format_RGBX8888 ==> CV_8UC4 (R G B A)
+ *   - QImage::Format_RGBA8888 ==> CV_8UC4 (R G B A)
+ *
+ * - For QImage::Format_RGB32 and QImage::Format_ARGB32, the
+ *   color channel order of generated cv::Mat will be (B G R A)
+ *   in little endian system or (A R G B) in big endian system.
  */
 cv::Mat image2Mat_shared(const QImage &img)
 {
-    Q_ASSERT(img.format() == QImage::Format_Indexed8 || img.format() == QImage::Format_RGB888
-             || img.format() == QImage::Format_RGB32 || img.format() == QImage::Format_ARGB32);
-
     if (img.isNull())
         return cv::Mat();
 
@@ -505,6 +510,10 @@ cv::Mat image2Mat_shared(const QImage &img)
     case QImage::Format_RGB888:
     case QImage::Format_RGB32:
     case QImage::Format_ARGB32:
+#if QT_VERSION >= 0x050200
+    case QImage::Format_RGBA8888:
+    case QImage::Format_RGBX8888:
+#endif
         return cv::Mat(img.height(), img.width(), CV_8UC(img.depth()/8), (uchar*)img.bits(), img.bytesPerLine());
     default:
         return cv::Mat();
@@ -513,12 +522,18 @@ cv::Mat image2Mat_shared(const QImage &img)
 
 /* Convert  cv::Mat to QImage without data copy
  *
- * - Supported type of cv::Mat is CV_8UC1, CV_8UC3(R G B order)
- *   , CV_8UC4 (B G R A order, in little endian system)
- *   or CV_8UC4 (A R G B order, in big endian system)
- * - QImage format is QImage::Format_Indexed8, Format_RGB888, Format_ARGB32
+ * - Supported type of cv::Mat are:
+ *   - CV_8UC1            ==> QImage::Format_Indexed8
+ *   - CV_8UC3 (R G B)    ==> QImage::Format_RGB888
+ *   - CV_8UC4 (B G R A)  ==> QImage::Format_ARGB32 or QImage::Format_RGB32
+ *   - CV_8UC4 (A R G B)  ==> QImage::Format_ARGB32 or QImage::Format_RGB32
+ *   - CV_8UC4 (R G B A)  ==> QImage::Format_RGBA8888 or QImage::Format_RGBX8888
+ *
+ * - Note that,
+ *   - CV_8UC4 (B G R A) works in little endian system only
+ *   - CV_8UC4 (A R G B) works in big endian system only.
  */
-QImage mat2Image_shared(const cv::Mat &mat)
+QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint)
 {
     Q_ASSERT(mat.type() == CV_8UC1 || mat.type() == CV_8UC3 || mat.type() == CV_8UC4);
 
@@ -535,7 +550,14 @@ QImage mat2Image_shared(const cv::Mat &mat)
     } else if (mat.type() == CV_8UC3) {
         img = QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
     } else if (mat.type() == CV_8UC4) {
-        img = QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_ARGB32);
+        if (formatHint != QImage::Format_RGB32 && formatHint != QImage::Format_ARGB32
+        #if QT_VERSION >= 0x050200
+                && formatHint != QImage::Format_RGBA8888 && formatHint != QImage::Format_RGBX8888
+        #endif
+                ) {
+            formatHint = QImage::Format_RGB32;
+        }
+        img = QImage(mat.data, mat.cols, mat.rows, mat.step, formatHint);
     }
 
     return img;

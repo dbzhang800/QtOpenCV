@@ -39,18 +39,31 @@ enum MatChannelOrder
 {
     MCO_BGR,
     MCO_RGB,
+    MCO_BGRA = MCO_BGR,
     MCO_RGBA = MCO_RGB,
-    MCO_BGRA = MCO_BGR
+    MCO_ARGB
 };
 
 //Standard convert, MatChannelOrder will be skipped if cv::Mat has only one channel
-cv::Mat image2Mat(const QImage &img, int matType = CV_8UC(0), MatChannelOrder matRgbOrder = MCO_BGR);
-QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_Invalid, MatChannelOrder matRgbOrder = MCO_BGR);
+cv::Mat image2Mat(const QImage &img, int matType = CV_8UC(0), MatChannelOrder matRgbOrder = MCO_BGRA);
+QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_Invalid, MatChannelOrder matRgbOrder = MCO_BGRA);
 
-//Convert without data copy. MatChannelOrder should be R G B (3 channels) ,B G R A(4 channels in little endian system)
-//or A R G B (4 channels in big endian system)
+/* Convert QImage to/from cv::Mat without data copy
+ *
+ * - Supported QImage formats and cv::Mat types are:
+ *   - QImage::Format_Indexed8 <==> CV_8UC1
+ *   - QImage::Format_RGB888   <==> CV_8UC3 (R G B)
+ *   - QImage::Format_RGB32    <==> CV_8UC4 (A R G B or B G R A)
+ *   - QImage::Format_ARGB32   <==> CV_8UC4 (A R G B or B G R A)
+ *   - QImage::Format_RGBX8888 <==> CV_8UC4 (R G B A)
+ *   - QImage::Format_RGBA8888 <==> CV_8UC4 (R G B A)
+ *
+ * - For QImage::Format_RGB32 and QImage::Format_ARGB32, the
+ *   color channel order of cv::Mat will be (B G R A) in little
+ *   endian system or (A R G B) in big endian system.
+ */
 cv::Mat image2Mat_shared(const QImage &img);
-QImage mat2Image_shared(const cv::Mat &mat);
+QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint = QImage::Format_Invalid);
 
 } //namespace QtOcv
 
