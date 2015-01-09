@@ -1,4 +1,4 @@
-#include "../../../cvmatandqimage.cpp"
+#include "cvmatandqimage.h"
 #include <QString>
 #include <QtTest>
 #include <QImage>

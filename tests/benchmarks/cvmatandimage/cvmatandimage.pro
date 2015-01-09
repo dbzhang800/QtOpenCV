@@ -1,5 +1,4 @@
-include (../../../opencv.pri)
-INCLUDEPATH += ../../..
+include (../../../QtOpenCV.pri)
 QT       += testlib
 
 add_opencv_modules(core imgproc)

@@ -2,7 +2,7 @@
 
  * QtOpenCV provides some helper functions to converting cv::Mat from/to QImage.
 
- * QtOpenCV provides a opencv.pri file which can be used to integrate OpenCV2 to qmake-based project
+ * QtOpenCV provides a QtOpenCV.pri file which can be used to integrate OpenCV2 to qmake-based project
 
  **Note: OpenCV2.2 or newer is needed.**
 

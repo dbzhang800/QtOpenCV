@@ -26,7 +26,7 @@
 #ifndef CVMATANDQIMAGE_H
 #define CVMATANDQIMAGE_H
 
-#include <QImage>
+#include <QtGui/qimage.h>
 #include <opencv2/core/core.hpp>
 
 namespace cv {
