@@ -85,7 +85,7 @@ void Dialog::onOpenButtonClicked()
 
     ui->label->setPixmap(QPixmap::fromImage(img));
 
-    cv::Mat mat = QtOcv::image2Mat(img, CV_32FC1);
+    cv::Mat mat = QtOcv::image2Mat(img.convertToFormat(QImage::Format_Indexed8));
     cv::Mat out_mat;
     calcFFT(mat, out_mat);
 

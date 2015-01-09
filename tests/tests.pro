@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    testcvmatandimage \
-    benchmarks
+    testcvmatandimage
+#    benchmarks
