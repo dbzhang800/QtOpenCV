@@ -9,22 +9,51 @@
 ## cv::Mat <==> QImage
 
  * Copy cvmatandqimage{.cpp .h} to your project's source tree.
- * Then take advantage of follow api functions to converting data between Cv::Mat ```C1 C3(RGB) C3(BGR) C4(RGBA) C4(BGRA)``` and QImage ```  Indexed8 RGB888 RGB32  ARGB32```
+ * Then take advantage of follow api functions to converting data between Cv::Mat and QImage.
 
-```
+```cpp
     namespace QtOcv {
-        cv::Mat image2Mat(const QImage &img, int channels = 0, MatChannelOrder rgbOrder = MCO_BGR);
-        QImage mat2Image(const cv::Mat &mat, QImage::Format format = QImage::Format_Invalid, MatChannelOrder rgbOrder = MCO_BGR);
+        /* Convert QImage to/from cv::Mat
+         *
+         * - All other image formats should be converted to one of following formats.
+         *   - QImage::Format_Indexed8  <==> 8UC1 16UC1 32FC1
+         *   - QImage::Format_RGB888    <==> 8UC3 16UC3 32FC3 (R G B) or (B G R)
+         *   - QImage::Format_ARGB32    <==> 8UC4 16UC4 32FC4 (B G R A) or (A R G B)
+         *   - QImage::Format_RGB32     <==> 8UC4 16UC4 32FC4 (B G R A) or (A R G B)
+         *   - QImage::Format_RGBA8888  <==> 8UC4 16UC4 32FC4 (R G B A)
+         *   - QImage::Format_RGBX8888  <==> 8UC4 16UC4 32FC4 (R G B A)
+         *   - QImage::Format_Invalid(means auto selection)
+         *
+         * - For QImage::Format_RGB32 and QImage::Format_ARGB32,
+         *   the color channel order of cv::Mat will be (B G R A) in
+         *   little endian system or (A R G B) in big endian system.
+         */
+        cv::Mat image2Mat(const QImage &img, int matDepth = CV_8U, MatColorOrder *order=0);
+        QImage mat2Image(const cv::Mat &mat, MatColorOrder order=MCO_BGR, QImage::Format formatHint = QImage::Format_Invalid);
+
     } //namespace QtOcv
 ```
 
- * In addition, two other functions are provided which works more efficient when operating on `CV_8UC1`、`CV_8UC3`(R G B)、`CV_8UC4`(A R G B or B G R A depending on system endian)
+ * In addition, two other functions are provided which works more efficient when operating on `CV_8UC1`, `CV_8UC3` or `CV_8UC4`
 
-```
+```cpp
     namespace QtOcv {
-    //Convert without data copy. note that, RgbOrder of cv::Mat must be R G B (3 channels) or B G R A(4 channels)
-    cv::Mat image2Mat_shared(const QImage &img);
-    QImage mat2Image_shared(const cv::Mat &mat);
+        /* Convert QImage to/from cv::Mat without data copy
+         *
+         * - Supported QImage formats and cv::Mat types are:
+         *   - QImage::Format_Indexed8 <==> CV_8UC1
+         *   - QImage::Format_RGB888   <==> CV_8UC3 (R G B)
+         *   - QImage::Format_RGB32    <==> CV_8UC4 (B G R A) or (A R G B)
+         *   - QImage::Format_ARGB32   <==> CV_8UC4 (B G R A) or (A R G B)
+         *   - QImage::Format_RGBX8888 <==> CV_8UC4 (R G B A)
+         *   - QImage::Format_RGBA8888 <==> CV_8UC4 (R G B A)
+         *
+         * - For QImage::Format_RGB32 and QImage::Format_ARGB32, the
+         *   color channel order of cv::Mat will be (B G R A) in little
+         *   endian system or (A R G B) in big endian system.
+         */
+        cv::Mat image2Mat_shared(const QImage &img, MatColorOrder *order=0);
+        QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint = QImage::Format_Invalid);
     } //namespace QtOcv
 ```
 
@@ -47,14 +76,17 @@ In the case of color images, the decoded images will have the **channels stored 
 
 **Note:** If you don't care opencv_highgui module, you can always use the same channels order as QImage.
 
-#### Data bytes order of QImage is `B G R A`(little endian) `A R G B`(big endian) and `R G B`
+#### Data bytes order of QImage
 
  * In Little Endian System
 
 ```
     QImage::Format_RGB32  ==> B G R 255
     QImage::Format_ARGB32 ==> B G R A
+
     QImage::Format_RGB888 ==> R G B
+    QImage::Format_RGBX8888 ==> R G B 255
+    QImage::Format_RGBA8888 ==> R G B A
 ```
 
  * Ins Big Endian System
@@ -62,7 +94,10 @@ In the case of color images, the decoded images will have the **channels stored 
 ```
     QImage::Format_RGB32  ==> 255 R G B
     QImage::Format_ARGB32 ==> A R G B
+
     QImage::Format_RGB888 ==> R G B
+    QImage::Format_RGBX8888 ==> R G B 255
+    QImage::Format_RGBA8888 ==> R G B A
 ```
 
 #### How to swap channels?

@@ -1,5 +1,5 @@
 /****************************************************************************
-** Copyright (c) 2012 Debao Zhang <hello@debao.me>
+** Copyright (c) 2012-2015 Debao Zhang <hello@debao.me>
 ** All right reserved.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining
