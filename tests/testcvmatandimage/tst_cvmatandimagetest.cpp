@@ -14,6 +14,7 @@
 using namespace QtOcv;
 
 Q_DECLARE_METATYPE(QImage::Format)
+Q_DECLARE_METATYPE(MatColorOrder)
 Q_DECLARE_METATYPE(cv::Mat)
 Q_DECLARE_METATYPE(cv::Vec4b)
 
@@ -118,21 +119,21 @@ private Q_SLOTS:
 private:
     cv::Mat mat_8UC1;
     cv::Mat mat_16UC1;
-    cv::Mat mat_64FC1;
+    cv::Mat mat_32FC1;
 
     cv::Mat mat_8UC3;
     cv::Mat mat_16UC3;
-    cv::Mat mat_64FC3;
+    cv::Mat mat_32FC3;
 
     cv::Mat mat_8UC4_rgba;
     cv::Mat mat_16UC4_rgba;
-    cv::Mat mat_64FC4_rgba;
+    cv::Mat mat_32FC4_rgba;
     cv::Mat mat_8UC4_argb;
     cv::Mat mat_16UC4_argb;
-    cv::Mat mat_64FC4_argb;
+    cv::Mat mat_32FC4_argb;
     cv::Mat mat_8UC4_bgra;
     cv::Mat mat_16UC4_bgra;
-    cv::Mat mat_64FC4_bgra;
+    cv::Mat mat_32FC4_bgra;
 
     QImage image_indexed8;
     QImage image_rgb888;
@@ -146,27 +147,26 @@ private:
 
 CvMatAndImageTest::CvMatAndImageTest()
 {
-
     const int width = 200;
     const int height = 100;
 
     mat_8UC1 = cv::Mat(height, width, CV_8UC1);
     mat_16UC1 = cv::Mat(height, width, CV_16UC1);
-    mat_64FC1 = cv::Mat(height, width, CV_64FC1);
+    mat_32FC1 = cv::Mat(height, width, CV_32FC1);
 
     mat_8UC3 = cv::Mat(height, width, CV_8UC3);
     mat_16UC3 = cv::Mat(height, width, CV_16UC3);
-    mat_64FC3 = cv::Mat(height, width, CV_64FC3);
+    mat_32FC3 = cv::Mat(height, width, CV_32FC3);
 
     mat_8UC4_rgba = cv::Mat(height, width, CV_8UC4);
     mat_16UC4_rgba = cv::Mat(height, width, CV_16UC4);
-    mat_64FC4_rgba = cv::Mat(height, width, CV_64FC4);
+    mat_32FC4_rgba = cv::Mat(height, width, CV_32FC4);
     mat_8UC4_argb = cv::Mat(height, width, CV_8UC4);
     mat_16UC4_argb = cv::Mat(height, width, CV_16UC4);
-    mat_64FC4_argb = cv::Mat(height, width, CV_64FC4);
+    mat_32FC4_argb = cv::Mat(height, width, CV_32FC4);
     mat_8UC4_bgra = cv::Mat(height, width, CV_8UC4);
     mat_16UC4_bgra = cv::Mat(height, width, CV_16UC4);
-    mat_64FC4_bgra = cv::Mat(height, width, CV_64FC4);
+    mat_32FC4_bgra = cv::Mat(height, width, CV_32FC4);
 
     image_indexed8 = QImage(width, height, QImage::Format_Indexed8);
     QVector<QRgb> colorTable;
@@ -188,11 +188,11 @@ CvMatAndImageTest::CvMatAndImageTest()
             uchar a = b/2;
             mat_8UC1.at<uchar>(row, col) = r;
             mat_16UC1.at<quint16>(row, col) = r*255;
-            mat_64FC1.at<double>(row, col) = r/255.0;
+            mat_32FC1.at<float>(row, col) = r/255.0;
 
             mat_8UC3.at<cv::Vec3b>(row, col) = cv::Vec3b(r, g, b);
             mat_16UC3.at<cv::Vec3w>(row, col) = cv::Vec3w(r*255, g*255, b*255);
-            mat_64FC3.at<cv::Vec3d>(row, col) = cv::Vec3d(r/255.0, g/255.0, b/255.0);
+            mat_32FC3.at<cv::Vec3f>(row, col) = cv::Vec3f(r/255.0, g/255.0, b/255.0);
 
             mat_8UC4_rgba.at<cv::Vec4b>(row, col) = cv::Vec4b(r, g, b, a);
             mat_8UC4_argb.at<cv::Vec4b>(row, col) = cv::Vec4b(a, r, g, b);
@@ -202,9 +202,9 @@ CvMatAndImageTest::CvMatAndImageTest()
             mat_16UC4_argb.at<cv::Vec4w>(row, col) = cv::Vec4w(a*255, r*255, g*255, b*255);
             mat_16UC4_bgra.at<cv::Vec4w>(row, col) = cv::Vec4w(b*255, g*255, r*255, a*255);
 
-            mat_64FC4_rgba.at<cv::Vec4d>(row, col) = cv::Vec4d(r/255.0, g/255.0, b/255.0, a/255.0);
-            mat_64FC4_argb.at<cv::Vec4d>(row, col) = cv::Vec4d(a/255.0, r/255.0, g/255.0, b/255.0);
-            mat_64FC4_bgra.at<cv::Vec4d>(row, col) = cv::Vec4d(b/255.0, g/255.0, r/255.0, a/255.0);
+            mat_32FC4_rgba.at<cv::Vec4f>(row, col) = cv::Vec4f(r/255.0, g/255.0, b/255.0, a/255.0);
+            mat_32FC4_argb.at<cv::Vec4f>(row, col) = cv::Vec4f(a/255.0, r/255.0, g/255.0, b/255.0);
+            mat_32FC4_bgra.at<cv::Vec4f>(row, col) = cv::Vec4f(b/255.0, g/255.0, r/255.0, a/255.0);
 
             image_indexed8.setPixel(col, row, r);
             image_rgb888.setPixel(col, row, qRgb(r, g, b));
@@ -296,49 +296,51 @@ void CvMatAndImageTest::testSimpleGrayValue()
 void CvMatAndImageTest::testMat2QImage_data()
 {
     QTest::addColumn<cv::Mat>("mat");
+    QTest::addColumn<MatColorOrder>("mcOrder");
     QTest::addColumn<QImage::Format>("formatHint");
     QTest::addColumn<QImage>("expect");
 
     //Test data: C1 ==> Indexed8
-    QTest::newRow("8UC1_Invalid") << mat_8UC1 << QImage::Format_Invalid << image_indexed8;
-    QTest::newRow("8UC1_Indexed8") << mat_8UC1 << QImage::Format_Indexed8 << image_indexed8;
-    QTest::newRow("16UC1") << mat_16UC1 << QImage::Format_Indexed8 << image_indexed8;
-    QTest::newRow("64FC1") << mat_64FC1 << QImage::Format_Indexed8 << image_indexed8;
+    QTest::newRow("8UC1_Invalid") << mat_8UC1 << MCO_BGR << QImage::Format_Invalid << image_indexed8;
+    QTest::newRow("8UC1_Indexed8") << mat_8UC1 << MCO_BGR << QImage::Format_Indexed8 << image_indexed8;
+    QTest::newRow("16UC1") << mat_16UC1 << MCO_BGR << QImage::Format_Indexed8 << image_indexed8;
+    QTest::newRow("32FC1") << mat_32FC1 << MCO_BGR << QImage::Format_Indexed8 << image_indexed8;
 
     //Test data: C3 ==> RGB8888
-    QTest::newRow("8UC3_Invalid") << mat_8UC3 << QImage::Format_Invalid << image_rgb888;
-    QTest::newRow("8UC3_RGB888") << mat_8UC3 << QImage::Format_RGB888 << image_rgb888;
-    QTest::newRow("16UC3") << mat_16UC3 << QImage::Format_RGB888 << image_rgb888;
-    QTest::newRow("64FC3") << mat_64FC3 << QImage::Format_RGB888 << image_rgb888;
+    QTest::newRow("8UC3_Invalid") << mat_8UC3 << MCO_RGB << QImage::Format_Invalid << image_rgb888;
+    QTest::newRow("8UC3_RGB888") << mat_8UC3 << MCO_RGB << QImage::Format_RGB888 << image_rgb888;
+    QTest::newRow("16UC3") << mat_16UC3 << MCO_RGB << QImage::Format_RGB888 << image_rgb888;
+    QTest::newRow("32FC3") << mat_32FC3 << MCO_RGB << QImage::Format_RGB888 << image_rgb888;
 
     //Test data: C4 ==> ARGB32
     if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
-        QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_bgra << QImage::Format_Invalid << image_argb32;
-        QTest::newRow("8UC4_ARGB32") << mat_8UC4_bgra << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("16UC4_ARGB32") << mat_16UC4_bgra << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("64FC4_ARGB32") << mat_64FC4_bgra << QImage::Format_ARGB32 << image_argb32;
+        QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_bgra << MCO_BGRA << QImage::Format_Invalid << image_argb32;
+        QTest::newRow("8UC4_ARGB32") << mat_8UC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
+        QTest::newRow("16UC4_ARGB32") << mat_16UC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
+        QTest::newRow("32FC4_ARGB32") << mat_32FC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
     } else {
-        QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_argb << QImage::Format_Invalid << image_argb32;
-        QTest::newRow("8UC4_ARGB32") << mat_8UC4_argb << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("16UC4_ARGB32") << mat_16UC4_argb << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("64FC4_ARGB32") << mat_64FC4_argb << QImage::Format_ARGB32 << image_argb32;
+        QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_argb << MCO_ARGB << QImage::Format_Invalid << image_argb32;
+        QTest::newRow("8UC4_ARGB32") << mat_8UC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
+        QTest::newRow("16UC4_ARGB32") << mat_16UC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
+        QTest::newRow("32FC4_ARGB32") << mat_32FC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
     }
 
 #if QT_VERSION >= 0x050200
     //Test data: C4 ==> RGBA8888
-    QTest::newRow("8UC4_RGBA8888") << mat_8UC4_rgba << QImage::Format_RGBA8888 << image_rgba8888;
-    QTest::newRow("16UC4_RGBA8888") << mat_16UC4_rgba << QImage::Format_RGBA8888 << image_rgba8888;
-    QTest::newRow("64FC4_RGBA8888") << mat_64FC4_rgba << QImage::Format_RGBA8888 << image_rgba8888;
+    QTest::newRow("8UC4_RGBA8888") << mat_8UC4_rgba << MCO_RGBA << QImage::Format_RGBA8888 << image_rgba8888;
+    QTest::newRow("16UC4_RGBA8888") << mat_16UC4_rgba << MCO_RGBA << QImage::Format_RGBA8888 << image_rgba8888;
+    QTest::newRow("32FC4_RGBA8888") << mat_32FC4_rgba << MCO_RGBA << QImage::Format_RGBA8888 << image_rgba8888;
 #endif
 }
 
 void CvMatAndImageTest::testMat2QImage()
 {
     QFETCH(cv::Mat, mat);
+    QFETCH(MatColorOrder, mcOrder);
     QFETCH(QImage::Format, formatHint);
     QFETCH(QImage, expect);
 
-    QImage convertedImage = mat2Image(mat, formatHint);
+    QImage convertedImage = mat2Image(mat, mcOrder, formatHint);
     QVERIFY(lenientCompare(convertedImage, expect));
 }
 
@@ -389,29 +391,29 @@ void CvMatAndImageTest::testQImage2Mat_data()
     //Test data: Indexed8 ==> C1
     QTest::newRow("Indexed8_8UC1") << image_indexed8 << CV_8U << mat_8UC1;
     QTest::newRow("Indexed8_16UC1") << image_indexed8 << CV_16U << mat_16UC1;
-    QTest::newRow("Indexed8_64FC1") << image_indexed8 << CV_64F << mat_64FC1;
+    QTest::newRow("Indexed8_32FC1") << image_indexed8 << CV_32F << mat_32FC1;
 
     //Test data: RGB888 ==> C3
     QTest::newRow("RGB8888_8UC3") << image_rgb888 << CV_8U << mat_8UC3;
     QTest::newRow("RGB8888_16UC3") << image_rgb888 << CV_16U << mat_16UC3;
-    QTest::newRow("RGB8888_64FC3") << image_rgb888 << CV_64F << mat_64FC3;
+    QTest::newRow("RGB8888_32FC3") << image_rgb888 << CV_32F << mat_32FC3;
 
     //Test data: ARGB32 ==> C4
     if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
         QTest::newRow("ARGB32_8UC4") << image_argb32 << CV_8U << mat_8UC4_bgra;
         QTest::newRow("ARGB32_16UC4") << image_argb32 << CV_16U << mat_16UC4_bgra;
-        QTest::newRow("ARGB32_64FC4") << image_argb32 << CV_64F << mat_64FC4_bgra;
+        QTest::newRow("ARGB32_32FC4") << image_argb32 << CV_32F << mat_32FC4_bgra;
     } else {
         QTest::newRow("ARGB32_8UC4") << image_argb32 << CV_8U << mat_8UC4_argb;
         QTest::newRow("ARGB32_16UC4") << image_argb32 << CV_16U << mat_16UC4_argb;
-        QTest::newRow("ARGB32_64FC4") << image_argb32 << CV_64F << mat_64FC4_argb;
+        QTest::newRow("ARGB32_32FC4") << image_argb32 << CV_32F << mat_32FC4_argb;
     }
 
 #if QT_VERSION >= 0x050200
     //Test data: RGBA8888 ==> C4
     QTest::newRow("RGBA8888_8UC4") << image_rgba8888 << CV_8U << mat_8UC4_rgba;
     QTest::newRow("RGBA8888_16UC4") << image_rgba8888 << CV_16U << mat_16UC4_rgba;
-    QTest::newRow("RGBA8888_64FC4") << image_rgba8888 << CV_64F << mat_64FC4_rgba;
+    QTest::newRow("RGBA8888_32FC4") << image_rgba8888 << CV_32F << mat_32FC4_rgba;
 #endif
 }
 
@@ -426,8 +428,8 @@ void CvMatAndImageTest::testQImage2Mat()
         QVERIFY(lenientCompare<uchar>(mat, expect));
     else if (mat.depth() == CV_16U)
         QVERIFY(lenientCompare<quint16>(mat, expect));
-    else if (mat.depth() == CV_64F)
-        QVERIFY(lenientCompare<double>(mat, expect));
+    else if (mat.depth() == CV_32F)
+        QVERIFY(lenientCompare<float>(mat, expect));
     else
         QVERIFY(false);
 }

@@ -35,6 +35,14 @@ class Mat;
 
 namespace QtOcv {
 
+enum MatColorOrder {
+    MCO_BGR,
+    MCO_RGB,
+    MCO_BGRA = MCO_BGR,
+    MCO_ARGB,
+    MCO_RGBA = MCO_RGB
+};
+
 /* Convert QImage to/from cv::Mat
  *
  * - Channels of cv::Mat should be 1, 3, 4
@@ -53,8 +61,8 @@ namespace QtOcv {
  *   the color channel order of cv::Mat will be (B G R A) in
  *   little endian system or (A R G B) in big endian system.
  */
-cv::Mat image2Mat(const QImage &img, int matDepth = CV_8U);
-QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint = QImage::Format_Invalid);
+cv::Mat image2Mat(const QImage &img, int matDepth = CV_8U, MatColorOrder *order=0);
+QImage mat2Image(const cv::Mat &mat, MatColorOrder order=MCO_BGR, QImage::Format formatHint = QImage::Format_Invalid);
 
 
 /* Convert QImage to/from cv::Mat without data copy
@@ -71,7 +79,7 @@ QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint = QImage::Format_
  *   color channel order of cv::Mat will be (B G R A) in little
  *   endian system or (A R G B) in big endian system.
  */
-cv::Mat image2Mat_shared(const QImage &img);
+cv::Mat image2Mat_shared(const QImage &img, MatColorOrder *order=0);
 QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint = QImage::Format_Invalid);
 
 } //namespace QtOcv
