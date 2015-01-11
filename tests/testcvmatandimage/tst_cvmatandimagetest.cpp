@@ -53,7 +53,7 @@ template<typename T>
 static bool lenientCompare(const cv::Mat &actual, const cv::Mat &expected)
 {
     if (expected.type() != actual.type()) {
-        qWarning("cv::Mat comparison failed: expected: %d C%d, got %d C%d",
+        qWarning("cv::Mat comparison failed: expected: depth %d channels %d, got depth %d channels %d",
                  expected.depth(), expected.channels(),
                  actual.depth(), actual.channels());
         return false;
@@ -66,7 +66,7 @@ static bool lenientCompare(const cv::Mat &actual, const cv::Mat &expected)
         return false;
     }
 
-    double threshold = 2.0e-2;
+    double threshold = 2.0e-1;
 
     std::vector<cv::Mat> actualPlanes(actual.channels());
     std::vector<cv::Mat> expectedPlanes(expected.channels());
@@ -410,8 +410,8 @@ void CvMatAndImageTest::testQImage2Mat_data()
 #if QT_VERSION >= 0x050200
     //Test data: RGBA8888 ==> C4
     QTest::newRow("RGBA8888_8UC4") << image_rgba8888 << CV_8U << mat_8UC4_rgba;
-    QTest::newRow("RGBA8888_16UC4") << image_rgba8888 << CV_16U << mat_8UC4_rgba;
-    QTest::newRow("RGBA8888_64FC4") << image_rgba8888 << CV_64F << mat_8UC4_rgba;
+    QTest::newRow("RGBA8888_16UC4") << image_rgba8888 << CV_16U << mat_16UC4_rgba;
+    QTest::newRow("RGBA8888_64FC4") << image_rgba8888 << CV_64F << mat_64FC4_rgba;
 #endif
 }
 
