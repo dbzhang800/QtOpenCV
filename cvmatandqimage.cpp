@@ -195,21 +195,21 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatH
                     format = QImage::Format_ARGB32;
                 if (QSysInfo::ByteOrder == QSysInfo::LittleEndian)
                     cv::cvtColor(mat, newMat, CV_RGBA2BGRA);
-//                else
-//                    cv::cvtColor(mat, newMat, CV_RGBA2ARGB);
+                else
+                    qWarning("RGBA is not supported.");
 #if QT_VERSION >= 0x050200
             }
 #endif
         } else if (order == MCO_BGRA) {
             if (formatHint != QImage::Format_ARGB32 && formatHint != QImage::Format_RGB32)
                 format = QImage::Format_ARGB32;
-//            if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
-//                cv::cvtColor(mat, newMat, CV_BGRA2ARGB);
+            if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
+                qWarning("BGRA is not supported.");
         } else if (order == MCO_ARGB) {
             if (formatHint != QImage::Format_ARGB32 && formatHint != QImage::Format_RGB32)
                 format = QImage::Format_ARGB32;
-//            if (QSysInfo::ByteOrder == QSysInfo::LittleEndian)
-//                cv::cvtColor(mat, newMat, CV_ARGB2BGRA);
+            if (QSysInfo::ByteOrder == QSysInfo::LittleEndian)
+                qWarning("ARGB is not supported.");
         }
     }
     if (newMat.empty())
