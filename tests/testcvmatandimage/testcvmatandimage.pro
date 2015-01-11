@@ -2,7 +2,7 @@ include (../../QtOpenCV.pri)
 
 QT       += testlib
 
-TARGET = tst_testcvmatandimagetest
+TARGET = tst_cvmatandimagetest
 
 add_opencv_modules(core imgproc highgui)
 
@@ -11,5 +11,6 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-SOURCES += tst_testcvmatandimagetest.cpp
+SOURCES += \
+    tst_cvmatandimagetest.cpp
 DEFINES += SRCDIR=\\\"$$PWD/\\\"

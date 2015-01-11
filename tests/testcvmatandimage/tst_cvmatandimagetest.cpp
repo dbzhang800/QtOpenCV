@@ -467,4 +467,4 @@ void CvMatAndImageTest::testQImage2MatShared()
 
 QTEST_MAIN(CvMatAndImageTest)
 
-#include "tst_testcvmatandimagetest.moc"
+#include "tst_cvmatandimagetest.moc"
