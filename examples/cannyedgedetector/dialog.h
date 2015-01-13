@@ -18,15 +18,14 @@ public:
 
 private slots:
     void onOpenButtonClicked();
-    void onGroupBoxToggled();
     void onLowThresHoldEditValueChanged();
 
 private:
     void updateImage();
 
     Ui::Dialog *ui;
-    QImage currentImage;
-    cv::Mat currentMat;
+    QImage currentImage_RGB888;
+    cv::Mat currentMat_8UC1;
 };
 
 #endif // DIALOG_H

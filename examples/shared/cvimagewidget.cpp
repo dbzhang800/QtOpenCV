@@ -110,6 +110,7 @@ ImageWidget::ImageWidget(QWidget *parent)
     sc->addItem(d->m_pixmapItem);
     setScene(sc);
     setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+    setDragMode(ScrollHandDrag);
 
 //    QPixmap pix(512, 512);
 //    pix.fill(Qt::gray);

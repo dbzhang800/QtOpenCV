@@ -157,7 +157,7 @@ In the case of color images, the decoded images will have the **channels stored 
 If OpenCV has been installed in the standard location all we need is
 
 ```
-    include (opencv.pri)
+    include (yourpath/yourpath/youpath/QtOpenCV.pri)
     add_opencv_modules(core imgproc highgui)
 ```
 

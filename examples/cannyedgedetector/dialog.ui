@@ -13,21 +13,52 @@
   <property name="windowTitle">
    <string>Canny Edge Detection Example</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout_6">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0">
      <item>
-      <widget class="QtOcv::ImageWidget" name="imageWidget"/>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>2</number>
+       </property>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>Orignal Image</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QtOcv::ImageWidget" name="imageWidget"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_2">
+        <attribute name="title">
+         <string>Canny Edge Image</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QtOcv::ImageWidget" name="imageWidget_canny"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_3">
+        <attribute name="title">
+         <string>Fit Ellipse</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QtOcv::ImageWidget" name="imageWidget_ellipse"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
           <string>Canny Edge Detector</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
          </property>
          <property name="checked">
           <bool>false</bool>
@@ -87,12 +118,18 @@
          <property name="title">
           <string>Fit Ellipse</string>
          </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
          <property name="checked">
           <bool>false</bool>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QPlainTextEdit" name="ellipseInfoEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
