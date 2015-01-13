@@ -19,5 +19,5 @@ Dialog::~Dialog()
 
 void Dialog::onImageArrival(const QImage &image)
 {
-    ui->view->setPixmap(QPixmap::fromImage(image));
+    ui->imageWidget->setImage(image);
 }

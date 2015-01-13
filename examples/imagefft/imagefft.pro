@@ -1,4 +1,6 @@
 include(../../QtOpenCV.pri)
+include(../shared/shared.pri)
+
 add_opencv_modules(core imgproc)
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets

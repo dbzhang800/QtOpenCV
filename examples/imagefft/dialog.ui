@@ -6,22 +6,39 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>452</width>
-    <height>356</height>
+    <width>625</width>
+    <height>467</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>QtOpenCV FFT Demo</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
-    <widget class="QLabel" name="label">
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(170, 170, 255);</string>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>1</number>
      </property>
-     <property name="text">
-      <string/>
-     </property>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Original Image</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QtOcv::ImageWidget" name="imageWidget"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_2">
+      <attribute name="title">
+       <string>FFT Result</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QtOcv::ImageWidget" name="fftImageWidget"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -51,6 +68,13 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QtOcv::ImageWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>cvimagewidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

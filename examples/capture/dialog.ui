@@ -13,9 +13,9 @@
   <property name="windowTitle">
    <string>QtOpenCV Camera Demo</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="view"/>
+    <widget class="QtOcv::ImageWidget" name="imageWidget"/>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -51,6 +51,13 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QtOcv::ImageWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>cvimagewidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
