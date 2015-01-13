@@ -1,4 +1,5 @@
 include(../../QtOpenCV.pri)
+include(../shared/shared.pri)
 add_opencv_modules(core imgproc)
 
 QT       += core gui

@@ -73,12 +73,12 @@ void Dialog::onGroupBoxToggled()
 void Dialog::updateImage()
 {
     if (currentImage.isNull()) {
-        ui->label->clear();
+        ui->imageWidget->setPixmap(QPixmap());
         return;
     }
 
     if (!ui->groupBox->isChecked()) {
-        ui->label->setPixmap(QPixmap::fromImage(currentImage));
+        ui->imageWidget->setImage(currentImage);
     } else {
         int kernel_size = 3;
 
@@ -120,6 +120,6 @@ void Dialog::updateImage()
         }
 
 
-        ui->label->setPixmap(QPixmap::fromImage(QtOcv::mat2Image(cimage)));
+        ui->imageWidget->setImage(QtOcv::mat2Image(cimage));
     }
 }

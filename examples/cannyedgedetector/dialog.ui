@@ -13,40 +13,11 @@
   <property name="windowTitle">
    <string>Canny Edge Detection Example</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0">
      <item>
-      <widget class="QScrollArea" name="scrollArea">
-       <property name="widgetResizable">
-        <bool>true</bool>
-       </property>
-       <widget class="QWidget" name="scrollAreaWidgetContents">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>309</width>
-          <height>380</height>
-         </rect>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="styleSheet">
-            <string notr="true">background-color: rgb(255, 255, 255);</string>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </widget>
+      <widget class="QtOcv::ImageWidget" name="imageWidget"/>
      </item>
      <item>
       <widget class="QGroupBox" name="groupBox">
@@ -145,6 +116,13 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QtOcv::ImageWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>cvimagewidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
