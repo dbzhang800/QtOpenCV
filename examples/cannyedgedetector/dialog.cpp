@@ -44,17 +44,7 @@ void Dialog::onOpenButtonClicked()
 
     settings.setValue("lastPath", filename);
     currentImage = img;
-
-    QtOcv::MatColorOrder order;
-    cv::Mat mat0 = QtOcv::image2Mat(img, CV_8U, &order);
-
-    //Make sure currentMat is gray
-    if (mat0.channels() == 3)
-        cv::cvtColor(mat0, currentMat, order == QtOcv::MCO_BGR ? CV_BGR2GRAY : CV_RGB2GRAY);
-    else if (mat0.channels() == 4)
-        cv::cvtColor(mat0, currentMat, order == QtOcv::MCO_BGRA ? CV_BGRA2GRAY : CV_RGBA2GRAY);
-    else
-        currentMat = mat0;
+    currentMat = QtOcv::image2Mat(img, CV_8UC1);
 
     updateImage();
 }
@@ -118,7 +108,6 @@ void Dialog::updateImage()
 //            qDebug()<< "Size(" << box.size.width << ", " << box.size.height << ")";
 //            qDebug()<< "Angle " << box.angle;
         }
-
 
         ui->imageWidget->setImage(QtOcv::mat2Image(cimage));
     }

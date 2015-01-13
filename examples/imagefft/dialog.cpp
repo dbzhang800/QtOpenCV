@@ -85,16 +85,7 @@ void Dialog::onOpenButtonClicked()
 
     ui->label->setPixmap(QPixmap::fromImage(img));
 
-    QtOcv::MatColorOrder order;
-    cv::Mat mat0 = QtOcv::image2Mat(img, CV_8U, &order);
-
-    cv::Mat mat;
-    if (mat0.channels() == 3)
-        cv::cvtColor(mat0, mat, order == QtOcv::MCO_BGR ? CV_BGR2GRAY : CV_RGB2GRAY);
-    else if (mat0.channels() == 4)
-        cv::cvtColor(mat0, mat, order == QtOcv::MCO_BGRA ? CV_BGRA2GRAY : CV_RGBA2GRAY);
-    else
-        mat = mat0;
+    cv::Mat mat = QtOcv::image2Mat(img, CV_8UC1);
 
     cv::Mat out_mat;
     calcFFT(mat, out_mat);
