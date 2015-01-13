@@ -31,7 +31,7 @@ Dialog::~Dialog()
 
 void Dialog::onOpenButtonClicked()
 {
-    QSettings settings("QtOpenCV_example.ini");
+    QSettings settings("QtOpenCV_example.ini", QSettings::IniFormat);
     QString lastPath = settings.value("lastPath").toString();
 
     QString filename = QFileDialog::getOpenFileName(this, tr("Open Image"), lastPath, "Images(*.png *.bmp *.jpg *.gif)");
