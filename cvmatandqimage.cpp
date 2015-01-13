@@ -49,9 +49,10 @@ QImage mat2Image_(const cv::Mat & mat, QImage::Format format, double scalefactor
     }
 
     for (int row=0; row<mat.rows; ++row) {
-        uchar *data = outImage.scanLine(row);
+        uchar *imageData = outImage.scanLine(row);
+        const T *matData = mat.ptr<T>(row);
         for (int col=0; col<mat.cols * mat.channels(); ++col)
-            *data++ = cv::saturate_cast<uchar>(mat.at<T>(row, col) * scalefactor);
+            *imageData++ = cv::saturate_cast<uchar>(matData[col] * scalefactor);
     }
 
     return outImage;
@@ -66,9 +67,10 @@ cv::Mat image2Mat_(const QImage &image, int matType, double scaleFactor)
     cv::Mat mat = cv::Mat(image.height(), image.width(), matType);
 
     for (int row = 0; row < mat.rows; ++row) {
-        const uchar *data = image.scanLine(row);
+        const uchar *imageData = image.scanLine(row);
+        T *matData = mat.ptr<T>(row);
         for (int col = 0; col < mat.cols * channels; ++col)
-            mat.at<T>(row, col) = cv::saturate_cast<T>(data[col] * scaleFactor);
+            *matData++ = cv::saturate_cast<T>(imageData[col] * scaleFactor);
     }
     return mat;
 }
@@ -81,6 +83,9 @@ namespace QtOcv {
  */
 cv::Mat image2Mat(const QImage &img, MatColorOrder *order, int matDepth)
 {
+    matDepth = CV_MAT_DEPTH(matDepth);
+    Q_ASSERT(matDepth==CV_8U || matDepth==CV_16U || matDepth==CV_32F);
+
     if (img.isNull())
         return cv::Mat();
 
@@ -113,15 +118,12 @@ cv::Mat image2Mat(const QImage &img, MatColorOrder *order, int matDepth)
 
     cv::Mat mat;
     const int matType = CV_MAKETYPE(matDepth, image.depth()/8);
-    switch (CV_MAT_DEPTH(matDepth)) {
+    switch (matDepth) {
     case CV_8U:
         mat = image2Mat_<uchar>(image, matType, 1.0);
         break;
     case CV_16U:
         mat = image2Mat_<quint16>(image, matType, 65535./255.);
-        break;
-    case CV_32S:
-        mat = image2Mat_<qint32>(image, matType, 65535./255.);
         break;
     case CV_32F:
         mat = image2Mat_<float>(image, matType, 1./255.);
@@ -273,9 +275,6 @@ QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint)
         break;
     case CV_16U:
         outImage = mat2Image_<quint16>(mat, format, 255./65535.);
-        break;
-    case CV_32S:
-        outImage = mat2Image_<qint32>(mat, format, 255./65535.);
         break;
     case CV_32F:
         outImage = mat2Image_<float>(mat, format, 255.);
