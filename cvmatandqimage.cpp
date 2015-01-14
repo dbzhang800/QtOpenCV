@@ -36,18 +36,11 @@ namespace {
 /* The caller must make sure the image format is valid.
 */
 template<typename T>
-QImage mat2Image_(const cv::Mat & mat, QImage::Format format, double scalefactor)
+QImage mat2Image_(const cv::Mat &mat, QImage::Format format, double scalefactor)
 {
     Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
 
     QImage outImage(mat.cols, mat.rows, format);
-    if (format == QImage::Format_Indexed8) {
-        QVector<QRgb> colorTable;
-        for (int i=0; i<256; ++i)
-            colorTable.append(qRgb(i,i,i));
-        outImage.setColorTable(colorTable);
-    }
-
     for (int row=0; row<mat.rows; ++row) {
         uchar *imageData = outImage.scanLine(row);
         const T *matData = mat.ptr<T>(row);
@@ -58,20 +51,44 @@ QImage mat2Image_(const cv::Mat & mat, QImage::Format format, double scalefactor
     return outImage;
 }
 
+template<>
+QImage mat2Image_<uchar>(const cv::Mat &mat, QImage::Format format, double /*scalefactor*/)
+{
+    Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
+    Q_ASSERT(mat.depth()==CV_8U);
+
+    QImage outImage(mat.cols, mat.rows, format);
+    for (int row=0; row<mat.rows; ++row)
+        memcpy(outImage.scanLine(row), mat.ptr<uchar>(row), mat.cols * mat.channels());
+
+    return outImage;
+}
+
 /* The caller must make sure the image format and matType is valid.
 */
 template<typename T>
 cv::Mat image2Mat_(const QImage &image, int matType, double scaleFactor)
 {
-    const int channels = CV_MAT_CN(matType);
     cv::Mat mat = cv::Mat(image.height(), image.width(), matType);
 
     for (int row = 0; row < mat.rows; ++row) {
         const uchar *imageData = image.scanLine(row);
         T *matData = mat.ptr<T>(row);
-        for (int col = 0; col < mat.cols * channels; ++col)
+        for (int col = 0; col < mat.cols * mat.channels(); ++col)
             *matData++ = cv::saturate_cast<T>(imageData[col] * scaleFactor);
     }
+    return mat;
+}
+
+template<>
+cv::Mat image2Mat_<uchar>(const QImage &image, int matType, double /*scaleFactor*/)
+{
+    Q_ASSERT(CV_MAT_DEPTH(matType)==CV_8U);
+    cv::Mat mat = cv::Mat(image.height(), image.width(), matType);
+
+    for (int row = 0; row < mat.rows; ++row)
+        memcpy(mat.ptr<uchar>(row), image.scanLine(row), mat.cols * mat.channels());
+
     return mat;
 }
 
@@ -335,6 +352,13 @@ QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint)
         break;
     default:
         break;
+    }
+
+    if (format == QImage::Format_Indexed8) {
+        QVector<QRgb> colorTable;
+        for (int i=0; i<256; ++i)
+            colorTable.append(qRgb(i,i,i));
+        outImage.setColorTable(colorTable);
     }
     return outImage;
 }
