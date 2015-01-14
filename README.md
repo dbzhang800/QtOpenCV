@@ -131,10 +131,18 @@ In the case of color images, the decoded images will have the **channels stored 
     ...
 ```
 
- * In Qt, swap r and b channel of QImage
+ * In Qt
+
+Swap r and b channel of QImage
 
 ```
     QImage QImage::rgbSwapped();
+```
+
+If the depth of the image is 32, the following function can be used too.
+
+```
+    void QImage::invertPixels(InvertMode mode = InvertRgb)
 ```
 
 #### Common Image Data Range of OpenCV

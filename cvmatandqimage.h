@@ -49,7 +49,7 @@ enum MatColorOrder {
  * - Channels of cv::Mat should be 1, 3, 4
  * - Depth of cv::Mat should be 8U, 16U or 32F
  */
-cv::Mat image2Mat(const QImage &img, int matType = CV_8UC(0), MatColorOrder order=MCO_BGR);
+cv::Mat image2Mat(const QImage &img, int requiredMatType = CV_8UC(0), MatColorOrder requiredOrder=MCO_BGR);
 QImage mat2Image(const cv::Mat &mat, MatColorOrder order=MCO_BGR, QImage::Format formatHint = QImage::Format_Invalid);
 
 

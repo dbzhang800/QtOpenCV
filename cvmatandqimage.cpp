@@ -75,6 +75,17 @@ cv::Mat image2Mat_(const QImage &image, int matType, double scaleFactor)
     return mat;
 }
 
+/*ARGB <==> BGRA
+ */
+cv::Mat argb2bgra(const cv::Mat &mat)
+{
+    Q_ASSERT(mat.channels()==4);
+
+    cv::Mat newMat(mat.rows, mat.cols, mat.type());
+    int from_to[] = {0,3, 1,2, 2,1, 3,0};
+    cv::mixChannels(&mat, 1, &newMat, 1, from_to, 4);
+    return newMat;
+}
 } //namespace
 
 namespace QtOcv {
@@ -158,18 +169,21 @@ cv::Mat image2Mat(const QImage &img, MatColorOrder *order, int matDepth)
 
 /* Convert QImage to cv::Mat
  */
-cv::Mat image2Mat(const QImage &img, int matType, MatColorOrder order)
+cv::Mat image2Mat(const QImage &img, int requiredMatType, MatColorOrder requriedOrder)
 {
-    Q_ASSERT(CV_MAT_CN(matType) == CV_CN_MAX || CV_MAT_CN(matType)==1 \
-             || CV_MAT_CN(matType)==3 || CV_MAT_CN(matType)==4);
+    int targetDepth = CV_MAT_DEPTH(requiredMatType);
+    int targetChannels = CV_MAT_CN(requiredMatType);
+    Q_ASSERT(targetChannels==CV_CN_MAX || targetChannels==1 || targetChannels==3 || targetChannels==4);
+    Q_ASSERT(targetDepth==CV_8U || targetDepth==CV_16U || targetDepth==CV_32F);
 
-    MatColorOrder imageOrder;
-    cv::Mat mat0 = image2Mat(img, &imageOrder, CV_MAT_DEPTH(matType));
+    MatColorOrder srcOrder;
+    cv::Mat mat0 = image2Mat(img, &srcOrder, targetDepth);
 
     cv::Mat mat;
-
+    const float maxAlpha = targetDepth==CV_8U ? 255 : (targetDepth==CV_16U ? 65535 : 1.0);
+    if (targetChannels == CV_CN_MAX)
+        targetChannels = mat0.channels();
     //Adjust mat if needed.
-    int targetChannels = CV_MAT_CN(matType) == CV_CN_MAX ? mat0.channels() : CV_MAT_CN(matType);
     switch(targetChannels) {
     case 1:
         if (mat0.channels() == 1) {
@@ -177,56 +191,82 @@ cv::Mat image2Mat(const QImage &img, int matType, MatColorOrder order)
         } else if (mat0.channels() == 3) {
             cv::cvtColor(mat0, mat, CV_RGB2GRAY);
         } else if (mat0.channels() == 4) {
-            if (imageOrder == MCO_BGRA) {
+            if (srcOrder == MCO_BGRA)
                 cv::cvtColor(mat0, mat, CV_BGRA2GRAY);
-            } else if (imageOrder == MCO_RGBA) {
+            else if (srcOrder == MCO_RGBA)
                 cv::cvtColor(mat0, mat, CV_RGBA2GRAY);
-            } else { //MCO_ARGB
-                qWarning("Not support yet.");
-            }
+            else//MCO_ARGB
+                cv::cvtColor(argb2bgra(mat0), mat, CV_BGRA2GRAY);
         }
         break;
     case 3:
         if (mat0.channels() == 1) {
-            cv::cvtColor(mat0, mat, order == MCO_BGR ? CV_GRAY2BGR : CV_GRAY2RGB);
+            cv::cvtColor(mat0, mat, requriedOrder == MCO_BGR ? CV_GRAY2BGR : CV_GRAY2RGB);
         } else if (mat0.channels() == 3) {
-            if (order != imageOrder)
+            if (requriedOrder != srcOrder)
                 cv::cvtColor(mat0, mat, CV_RGB2BGR);
             else
                 mat = mat0;
         } else if (mat0.channels() == 4) {
-            if (imageOrder == MCO_ARGB) {
-                qWarning("Not support at present");
-            } else if (imageOrder == MCO_BGRA) {
-                cv::cvtColor(mat0, mat, order == MCO_BGR ? CV_BGRA2BGR : CV_BGRA2RGB);
+            if (srcOrder == MCO_ARGB) {
+                mat = cv::Mat(mat0.rows, mat0.cols, CV_MAKE_TYPE(mat0.type(), 3));
+                int ARGB2RGB[] = {1,0, 2,1, 3,2};
+                int ARGB2BGR[] = {1,2, 2,1, 3,0};
+                cv::mixChannels(&mat0, 1, &mat, 1, requriedOrder == MCO_BGR ? ARGB2BGR : ARGB2RGB, 3);
+            } else if (srcOrder == MCO_BGRA) {
+                cv::cvtColor(mat0, mat, requriedOrder == MCO_BGR ? CV_BGRA2BGR : CV_BGRA2RGB);
             } else {//RGBA
-                cv::cvtColor(mat0, mat, order == MCO_BGR ? CV_RGBA2BGR : CV_RGBA2RGB);
+                cv::cvtColor(mat0, mat, requriedOrder == MCO_BGR ? CV_RGBA2BGR : CV_RGBA2RGB);
             }
         }
         break;
     case 4:
         if (mat0.channels() == 1) {
-            if (order == MCO_ARGB)
-                qWarning("Not support yet.");
-            else if (order == MCO_RGBA)
+            if (requriedOrder == MCO_ARGB) {
+                cv::Mat alphaMat(mat0.rows, mat0.cols, CV_MAKE_TYPE(mat0.type(), 1), cv::Scalar(maxAlpha));
+                mat = cv::Mat(mat0.rows, mat0.cols, CV_MAKE_TYPE(mat0.type(), 4));
+                cv::Mat in[] = {alphaMat, mat0};
+                int from_to[] = {0,0, 1,1, 1,2, 1,3};
+                cv::mixChannels(in, 2, &mat, 1, from_to, 4);
+            } else if (requriedOrder == MCO_RGBA) {
                 cv::cvtColor(mat0, mat, CV_GRAY2RGBA);
-            else //MCO_BGRA
+            } else {//MCO_BGRA
                 cv::cvtColor(mat0, mat, CV_GRAY2BGRA);
+            }
         } else if (mat0.channels() == 3) {
-            if (order == MCO_ARGB)
-                qWarning("Not support yet.");
-            else if (order == MCO_RGBA)
+            if (requriedOrder == MCO_ARGB) {
+                cv::Mat alphaMat(mat0.rows, mat0.cols, CV_MAKE_TYPE(mat0.type(), 1), cv::Scalar(maxAlpha));
+                mat = cv::Mat(mat0.rows, mat0.cols, CV_MAKE_TYPE(mat0.type(), 4));
+                cv::Mat in[] = {alphaMat, mat0};
+                int from_to[] = {0,0, 1,1, 2,2, 3,3};
+                cv::mixChannels(in, 2, &mat, 1, from_to, 4);
+            } else if (requriedOrder == MCO_RGBA) {
                 cv::cvtColor(mat0, mat, CV_RGB2RGBA);
-            else //MCO_BGRA
+            } else {//MCO_BGRA
                 cv::cvtColor(mat0, mat, CV_RGB2BGRA);
+            }
         } else if (mat0.channels() == 4) {
-            if (imageOrder == order) {
+            if (srcOrder == requriedOrder) {
                 mat = mat0;
             } else {
-                if (imageOrder == MCO_ARGB || order == MCO_ARGB)
-                    qWarning("Not support yet.");
-                else
+                if ((srcOrder == MCO_ARGB && requriedOrder == MCO_BGRA)
+                        ||(srcOrder == MCO_BGRA && requriedOrder == MCO_ARGB)) {
+                    //ARGB <==> BGRA
+                    mat = argb2bgra(mat0);
+                } else if (srcOrder == MCO_ARGB && requriedOrder == MCO_RGBA) {
+                    //ARGB ==> RGBA
+                    mat = cv::Mat(mat0.rows, mat0.cols, mat0.type());
+                    int from_to[] = {0,3, 1,0, 2,1, 3,2};
+                    cv::mixChannels(&mat0, 1, &mat, 1, from_to, 4);
+                } else if (srcOrder == MCO_RGBA && requriedOrder == MCO_ARGB) {
+                    //RGBA ==> ARGB
+                    mat = cv::Mat(mat0.rows, mat0.cols, mat0.type());
+                    int from_to[] = {0,1, 1,2, 2,3, 3,0};
+                    cv::mixChannels(&mat0, 1, &mat, 1, from_to, 4);
+                } else {
+                    //BGRA <==> RBGA
                     cv::cvtColor(mat0, mat, CV_BGRA2RGBA);
+                }
             }
         }
         break;
@@ -321,23 +361,25 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatH
 #endif
                 if (formatHint != QImage::Format_ARGB32 && formatHint != QImage::Format_RGB32)
                     format = QImage::Format_ARGB32;
-                if (QSysInfo::ByteOrder == QSysInfo::LittleEndian)
+                if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
                     cv::cvtColor(mat, newMat, CV_RGBA2BGRA);
-                else
-                    qWarning("RGBA is not supported.");
+                } else {
+                    //RGBA ==> ARGB
+                    newMat = cv::Mat(mat.rows, mat.cols, mat.type());
+                    int from_to[] = {0,1, 1,2, 2,3, 3,0};
+                    cv::mixChannels(&mat, 1, &newMat, 1, from_to, 4);
+                }
 #if QT_VERSION >= 0x050200
             }
 #endif
-        } else if (order == MCO_BGRA) {
+        } else {
             if (formatHint != QImage::Format_ARGB32 && formatHint != QImage::Format_RGB32)
                 format = QImage::Format_ARGB32;
-            if (QSysInfo::ByteOrder == QSysInfo::BigEndian)
-                qWarning("BGRA is not supported.");
-        } else if (order == MCO_ARGB) {
-            if (formatHint != QImage::Format_ARGB32 && formatHint != QImage::Format_RGB32)
-                format = QImage::Format_ARGB32;
-            if (QSysInfo::ByteOrder == QSysInfo::LittleEndian)
-                qWarning("ARGB is not supported.");
+
+            if ((order == MCO_BGRA && QSysInfo::ByteOrder == QSysInfo::BigEndian)
+                    || (order == MCO_ARGB && QSysInfo::ByteOrder == QSysInfo::LittleEndian)) {
+                newMat = argb2bgra(mat);
+            }
         }
     }
     if (newMat.empty())

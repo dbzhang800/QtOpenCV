@@ -326,22 +326,19 @@ void CvMatAndImageTest::testMat2QImage_2_data()
     QTest::newRow("32FC3(BGR)") << mat_32FC3_bgr << MCO_BGR << QImage::Format_RGB888 << image_rgb888;
 
     //Test data: C4 ==> ARGB32
-    if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
-        QTest::newRow("8UC4(BGRA)_ARGB32_Invalid") << mat_8UC4_bgra << MCO_BGRA << QImage::Format_Invalid << image_argb32;
-        QTest::newRow("8UC4(BGRA)_ARGB32") << mat_8UC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("16UC4(BGRA)_ARGB32") << mat_16UC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("32FC4(BGRA)_ARGB32") << mat_32FC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
-#if QT_VERSION <= 0x050200
-        QTest::newRow("8UC4(RGBA)_ARGB32") << mat_8UC4_rgba << MCO_RGBA << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("16UC4(RGBA)_ARGB32") << mat_16UC4_rgba << MCO_RGBA << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("32FC4(RGBA)_ARGB32") << mat_32FC4_rgba << MCO_RGBA << QImage::Format_ARGB32 << image_argb32;
-#endif
-    } else {
-        QTest::newRow("8UC4(ARGB)_ARGB32_Invalid") << mat_8UC4_argb << MCO_ARGB << QImage::Format_Invalid << image_argb32;
-        QTest::newRow("8UC4(ARGB)_ARGB32") << mat_8UC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("16UC4(ARGB)_ARGB32") << mat_16UC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("32FC4(ARGB)_ARGB32") << mat_32FC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
-    }
+    QTest::newRow("8UC4(BGRA)_ARGB32_Invalid") << mat_8UC4_bgra << MCO_BGRA << QImage::Format_Invalid << image_argb32;
+    QTest::newRow("8UC4(BGRA)_ARGB32") << mat_8UC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
+    QTest::newRow("16UC4(BGRA)_ARGB32") << mat_16UC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
+    QTest::newRow("32FC4(BGRA)_ARGB32") << mat_32FC4_bgra << MCO_BGRA << QImage::Format_ARGB32 << image_argb32;
+
+    QTest::newRow("8UC4(RGBA)_ARGB32") << mat_8UC4_rgba << MCO_RGBA << QImage::Format_ARGB32 << image_argb32;
+    QTest::newRow("16UC4(RGBA)_ARGB32") << mat_16UC4_rgba << MCO_RGBA << QImage::Format_ARGB32 << image_argb32;
+    QTest::newRow("32FC4(RGBA)_ARGB32") << mat_32FC4_rgba << MCO_RGBA << QImage::Format_ARGB32 << image_argb32;
+
+    QTest::newRow("8UC4(ARGB)_ARGB32_Invalid") << mat_8UC4_argb << MCO_ARGB << QImage::Format_Invalid << image_argb32;
+    QTest::newRow("8UC4(ARGB)_ARGB32") << mat_8UC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
+    QTest::newRow("16UC4(ARGB)_ARGB32") << mat_16UC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
+    QTest::newRow("32FC4(ARGB)_ARGB32") << mat_32FC4_argb << MCO_ARGB << QImage::Format_ARGB32 << image_argb32;
 
 #if QT_VERSION >= 0x050200
     //Test data: C4 ==> RGBA8888
@@ -481,18 +478,15 @@ void CvMatAndImageTest::testQImage2Mat_2_data()
     QTest::newRow("RGB888_32FC3(BGR)") << image_rgb888 << MCO_BGR << CV_32FC3 << mat_32FC3_bgr;
 
     //Test data: ARGB32 ==> C4
-    if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
-        QTest::newRow("ARGB32_8UC4(BGRA)") << image_argb32 << MCO_BGRA << CV_8UC4 << mat_8UC4_bgra;
-        QTest::newRow("ARGB32_16UC4(BGRA)") << image_argb32 << MCO_BGRA << CV_16UC4 << mat_16UC4_bgra;
-        QTest::newRow("ARGB32_32FC4(BGRA)") << image_argb32 << MCO_BGRA << CV_32FC4 << mat_32FC4_bgra;
-        QTest::newRow("ARGB32_8UC4(RGBA)") << image_argb32 << MCO_RGBA << CV_8UC4 << mat_8UC4_rgba;
-        QTest::newRow("ARGB32_16UC4(RGBA)") << image_argb32 << MCO_RGBA << CV_16UC4 << mat_16UC4_rgba;
-        QTest::newRow("ARGB32_32FC4(RGBA)") << image_argb32 << MCO_RGBA << CV_32FC4 << mat_32FC4_rgba;
-    } else {
-        QTest::newRow("ARGB32_8UC4(ARGB)") << image_argb32 << MCO_ARGB << CV_8UC4 << mat_8UC4_argb;
-        QTest::newRow("ARGB32_16UC4(ARGB)") << image_argb32 << MCO_ARGB << CV_16UC4 << mat_16UC4_argb;
-        QTest::newRow("ARGB32_32FC4(ARGB)") << image_argb32 << MCO_ARGB << CV_32FC4 << mat_32FC4_argb;
-    }
+    QTest::newRow("ARGB32_8UC4(BGRA)") << image_argb32 << MCO_BGRA << CV_8UC4 << mat_8UC4_bgra;
+    QTest::newRow("ARGB32_16UC4(BGRA)") << image_argb32 << MCO_BGRA << CV_16UC4 << mat_16UC4_bgra;
+    QTest::newRow("ARGB32_32FC4(BGRA)") << image_argb32 << MCO_BGRA << CV_32FC4 << mat_32FC4_bgra;
+    QTest::newRow("ARGB32_8UC4(RGBA)") << image_argb32 << MCO_RGBA << CV_8UC4 << mat_8UC4_rgba;
+    QTest::newRow("ARGB32_16UC4(RGBA)") << image_argb32 << MCO_RGBA << CV_16UC4 << mat_16UC4_rgba;
+    QTest::newRow("ARGB32_32FC4(RGBA)") << image_argb32 << MCO_RGBA << CV_32FC4 << mat_32FC4_rgba;
+    QTest::newRow("ARGB32_8UC4(ARGB)") << image_argb32 << MCO_ARGB << CV_8UC4 << mat_8UC4_argb;
+    QTest::newRow("ARGB32_16UC4(ARGB)") << image_argb32 << MCO_ARGB << CV_16UC4 << mat_16UC4_argb;
+    QTest::newRow("ARGB32_32FC4(ARGB)") << image_argb32 << MCO_ARGB << CV_32FC4 << mat_32FC4_argb;
 
 #if QT_VERSION >= 0x050200
     //Test data: RGBA8888 ==> C4
