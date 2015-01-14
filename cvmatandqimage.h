@@ -29,10 +29,6 @@
 #include <QtGui/qimage.h>
 #include <opencv2/core/core.hpp>
 
-namespace cv {
-class Mat;
-}
-
 namespace QtOcv {
 
 enum MatColorOrder {
@@ -58,12 +54,14 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order=MCO_BGR, QImage::Format
  * - Channels of cv::Mat should be 1, 3, 4
  *
  * - All other image formats should be converted to one of following formats.
- *   - QImage::Format_Indexed8  <==> 8UC1 16UC1 32FC1
- *   - QImage::Format_RGB888    <==> 8UC3 16UC3 32FC3 (R G B)
- *   - QImage::Format_ARGB32    <==> 8UC4 16UC4 32FC4 (B G R A) or (A R G B)
- *   - QImage::Format_RGB32     <==> 8UC4 16UC4 32FC4 (B G R A) or (A R G B)
- *   - QImage::Format_RGBA8888  <==> 8UC4 16UC4 32FC4 (R G B A)
- *   - QImage::Format_RGBX8888  <==> 8UC4 16UC4 32FC4 (R G B A)
+ *   - QImage::Format_Indexed8                 <==> CV_8UC1 CV_16UC1 CV_32FC1
+ *   - QImage::Format_RGB888                   <==> CV_8UC3 CV_16UC3 CV_32FC3 (R G B)
+ *   - QImage::Format_ARGB32                   <==> CV_8UC4 CV_16UC4 CV_32FC4 (B G R A) or (A R G B)
+ *   - QImage::Format_RGB32                    <==> CV_8UC4 CV_16UC4 CV_32FC4 (B G R A) or (A R G B)
+ *   - QImage::Format_ARGB32_Premultiplied     <==> CV_8UC4 CV_16UC4 CV_32FC4 (B G R A) or (A R G B)
+ *   - QImage::Format_RGBA8888                 <==> CV_8UC4 CV_16UC4 CV_32FC4 (R G B A)
+ *   - QImage::Format_RGBX8888                 <==> CV_8UC4 CV_16UC4 CV_32FC4 (R G B A)
+ *   - QImage::Format_RGBA8888_Premultiplied   <==> CV_8UC4 CV_16UC4 CV_32FC4 (R G B A)
  *   - QImage::Format_Invalid(means auto selection)
  *
  * - For QImage::Format_RGB32 and QImage::Format_ARGB32,
@@ -79,14 +77,17 @@ QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint);
 /* Convert QImage to/from cv::Mat without data copy
  *
  * - Supported QImage formats and cv::Mat types are:
- *   - QImage::Format_Indexed8 <==> CV_8UC1
- *   - QImage::Format_RGB888   <==> CV_8UC3 (R G B)
- *   - QImage::Format_RGB32    <==> CV_8UC4 (B G R A) or (A R G B)
- *   - QImage::Format_ARGB32   <==> CV_8UC4 (B G R A) or (A R G B)
- *   - QImage::Format_RGBX8888 <==> CV_8UC4 (R G B A)
- *   - QImage::Format_RGBA8888 <==> CV_8UC4 (R G B A)
+ *   - QImage::Format_Indexed8               <==> CV_8UC1
+ *   - QImage::Format_RGB888                 <==> CV_8UC3 (R G B)
+ *   - QImage::Format_RGB32                  <==> CV_8UC4 (A R G B or B G R A)
+ *   - QImage::Format_ARGB32                 <==> CV_8UC4 (A R G B or B G R A)
+ *   - QImage::Format_ARGB32_Premultiplied   <==> CV_8UC4 (A R G B or B G R A)
+ *   - QImage::Format_RGBX8888               <==> CV_8UC4 (R G B A)
+ *   - QImage::Format_RGBA8888               <==> CV_8UC4 (R G B A)
+ *   - QImage::Format_RGBA8888_Premultiplied <==> CV_8UC4 (R G B A)
  *
- * - For QImage::Format_RGB32 and QImage::Format_ARGB32, the
+ * - For QImage::Format_RGB32 ,QImage::Format_ARGB32
+ *   and QImage::Format_ARGB32_Premultiplied, the
  *   color channel order of cv::Mat will be (B G R A) in little
  *   endian system or (A R G B) in big endian system.
  *
