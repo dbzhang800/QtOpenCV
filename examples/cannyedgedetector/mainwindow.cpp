@@ -1,62 +1,52 @@
-#include "dialog.h"
-#include "ui_dialog.h"
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
 
 #include "cvmatandqimage.h"
-#include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-
 #include <QFileDialog>
 #include <QSettings>
-#include <QDebug>
 #include <QTime>
+#include <QDebug>
 
-#include <vector>
-
-Dialog::Dialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::Dialog)
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    connect(ui->openButton, SIGNAL(clicked()), SLOT(onOpenButtonClicked()));
-    connect(ui->lowThresholdEdit, SIGNAL(valueChanged(int)), SLOT(onLowThresHoldEditValueChanged()));
-
-    ui->lowThresholdEdit->setValue(10);
+    connect(ui->lowThresholdEdit, SIGNAL(valueChanged(int)), SLOT(updateImage()));
+    connect(ui->maxThresholdEdit, SIGNAL(valueChanged(int)), SLOT(updateImage()));
+    connect(ui->ellipseMaxCountEdit, SIGNAL(valueChanged(int)), SLOT(updateImage()));
 }
 
-Dialog::~Dialog()
+MainWindow::~MainWindow()
 {
     delete ui;
 }
 
-void Dialog::onOpenButtonClicked()
+void MainWindow::on_action_Open_triggered()
 {
     QSettings settings("QtOpenCV_example.ini", QSettings::IniFormat);
     QString lastPath = settings.value("lastPath").toString();
 
-    QString filename = QFileDialog::getOpenFileName(this, tr("Open Image"), lastPath, "Images(*.png *.bmp *.jpg *.gif)");
-    if (filename.isEmpty())
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Image"), lastPath, "Images(*.png *.bmp *.jpg *.gif)");
+    if (fileName.isEmpty())
         return;
 
-    QImage img(filename);
+    QImage img(fileName);
     if (img.isNull()) {
         currentImage_RGB888 = QImage();
     } else {
-        settings.setValue("lastPath", filename);
+        settings.setValue("lastPath", fileName);
         currentImage_RGB888 = img.convertToFormat(QImage::Format_RGB888);
         currentMat_8UC1 = QtOcv::image2Mat(currentImage_RGB888, CV_8UC1);
     }
     ui->imageWidget->setImage(img);
+    setWindowTitle(fileName);
     updateImage();
 }
 
-void Dialog::onLowThresHoldEditValueChanged()
-{
-    ui->maxThresholdEdit->setValue(ui->lowThresholdEdit->value()*3);
-    updateImage();
-}
-
-void Dialog::updateImage()
+void MainWindow::updateImage()
 {
     ui->ellipseInfoEdit->clear();
 
@@ -85,11 +75,19 @@ void Dialog::updateImage()
 
     cv::Mat cannyImage = QtOcv::image2Mat(currentImage_RGB888, CV_8UC3, QtOcv::MCO_BGR);
     cv::Mat ellipseImage = cannyImage.clone();
-    for(size_t i = 0; i < contours.size(); i++)
-    {
-        cv::drawContours(cannyImage, contours, (int)i, cv::Scalar::all(255), 1, 8);
 
+    for(size_t i = 0; i < contours.size(); i++) {
+        //Draw contours on the cannyImage.
+        cv::drawContours(cannyImage, contours, (int)i, cv::Scalar::all(255), 1, 8);
+    }
+
+    std::sort(contours.begin(), contours.end(), [](std::vector<cv::Point> a, std::vector<cv::Point> b) {
+        return b.size() < a.size();
+    });
+
+    for(size_t i = 0, foundCount = 0; (i < contours.size()) && (int(foundCount) < ui->ellipseMaxCountEdit->value()); i++) {
         size_t count = contours[i].size();
+
         if( count < 10 )
             continue;
 
@@ -97,8 +95,10 @@ void Dialog::updateImage()
         cv::Mat(contours[i]).convertTo(pointsf, CV_32F);
         cv::RotatedRect box = cv::fitEllipse(pointsf);
 
-        if( MAX(box.size.width, box.size.height) > MIN(box.size.width, box.size.height)*30 )
+        if( qMax(box.size.width, box.size.height) > qMin(box.size.width, box.size.height)*30 )
             continue;
+
+        foundCount++;
 
         cv::ellipse(ellipseImage, box, cv::Scalar(0,0,255), 1, CV_AA);
         cv::ellipse(ellipseImage, box.center, box.size*0.5f, box.angle, 0, 360, cv::Scalar(0,255,255), 1, CV_AA);
@@ -113,8 +113,9 @@ void Dialog::updateImage()
                 .arg(box.angle);
         ui->ellipseInfoEdit->appendPlainText(ellipseInfo);
     }
-    qDebug()<<t.elapsed();
+    qDebug()<<"Run... "<<t.elapsed()<<"ms";
 
     ui->imageWidget_canny->setImage(QtOcv::mat2Image(cannyImage));
     ui->imageWidget_ellipse->setImage(QtOcv::mat2Image(ellipseImage));
 }
+

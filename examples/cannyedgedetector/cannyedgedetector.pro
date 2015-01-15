@@ -10,8 +10,10 @@ TARGET = cannyedgedetector
 TEMPLATE = app
 
 SOURCES += main.cpp\
-        dialog.cpp
+    mainwindow.cpp
 
-HEADERS  += dialog.h
+HEADERS  += \
+    mainwindow.h
 
-FORMS    += dialog.ui
+FORMS    += \
+    mainwindow.ui
