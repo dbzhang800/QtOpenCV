@@ -33,65 +33,6 @@
 
 namespace {
 
-/* The caller must make sure the image format is valid.
-*/
-template<typename T>
-QImage mat2Image_(const cv::Mat &mat, QImage::Format format, double scalefactor)
-{
-    Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
-
-    QImage outImage(mat.cols, mat.rows, format);
-    for (int row=0; row<mat.rows; ++row) {
-        uchar *imageData = outImage.scanLine(row);
-        const T *matData = mat.ptr<T>(row);
-        for (int col=0; col<mat.cols * mat.channels(); ++col)
-            *imageData++ = cv::saturate_cast<uchar>(matData[col] * scalefactor);
-    }
-
-    return outImage;
-}
-
-template<>
-QImage mat2Image_<uchar>(const cv::Mat &mat, QImage::Format format, double /*scalefactor*/)
-{
-    Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
-    Q_ASSERT(mat.depth()==CV_8U);
-
-    QImage outImage(mat.cols, mat.rows, format);
-    for (int row=0; row<mat.rows; ++row)
-        memcpy(outImage.scanLine(row), mat.ptr<uchar>(row), mat.cols * mat.channels());
-
-    return outImage;
-}
-
-/* The caller must make sure the image format and matType is valid.
-*/
-template<typename T>
-cv::Mat image2Mat_(const QImage &image, int matType, double scaleFactor)
-{
-    cv::Mat mat = cv::Mat(image.height(), image.width(), matType);
-
-    for (int row = 0; row < mat.rows; ++row) {
-        const uchar *imageData = image.scanLine(row);
-        T *matData = mat.ptr<T>(row);
-        for (int col = 0; col < mat.cols * mat.channels(); ++col)
-            *matData++ = cv::saturate_cast<T>(imageData[col] * scaleFactor);
-    }
-    return mat;
-}
-
-template<>
-cv::Mat image2Mat_<uchar>(const QImage &image, int matType, double /*scaleFactor*/)
-{
-    Q_ASSERT(CV_MAT_DEPTH(matType)==CV_8U);
-    cv::Mat mat = cv::Mat(image.height(), image.width(), matType);
-
-    for (int row = 0; row < mat.rows; ++row)
-        memcpy(mat.ptr<uchar>(row), image.scanLine(row), mat.cols * mat.channels());
-
-    return mat;
-}
-
 /*ARGB <==> BGRA
  */
 cv::Mat argb2bgra(const cv::Mat &mat)
@@ -109,10 +50,12 @@ namespace QtOcv {
 
 /* Convert QImage to cv::Mat
  */
-cv::Mat image2Mat(const QImage &img, MatColorOrder *order, int matDepth)
+cv::Mat image2Mat(const QImage &img, int requiredMatType, MatColorOrder requriedOrder)
 {
-    matDepth = CV_MAT_DEPTH(matDepth);
-    Q_ASSERT(matDepth==CV_8U || matDepth==CV_16U || matDepth==CV_32F);
+    int targetDepth = CV_MAT_DEPTH(requiredMatType);
+    int targetChannels = CV_MAT_CN(requiredMatType);
+    Q_ASSERT(targetChannels==CV_CN_MAX || targetChannels==1 || targetChannels==3 || targetChannels==4);
+    Q_ASSERT(targetDepth==CV_8U || targetDepth==CV_16U || targetDepth==CV_32F);
 
     if (img.isNull())
         return cv::Mat();
@@ -152,59 +95,8 @@ cv::Mat image2Mat(const QImage &img, MatColorOrder *order, int matDepth)
         break;
     }
 
-    cv::Mat mat;
-    const int matType = CV_MAKETYPE(matDepth, image.depth()/8);
-    switch (matDepth) {
-    case CV_8U:
-        mat = image2Mat_<uchar>(image, matType, 1.0);
-        break;
-    case CV_16U:
-        mat = image2Mat_<quint16>(image, matType, 65535./255.);
-        break;
-    case CV_32F:
-        mat = image2Mat_<float>(image, matType, 1./255.);
-        break;
-    default:
-        break;
-    }
-
-    if (order) {
-        switch (image.format()) {
-        case QImage::Format_RGB888:
-            *order = MCO_RGB;
-            break;
-        case QImage::Format_RGB32:
-        case QImage::Format_ARGB32:
-        case QImage::Format_ARGB32_Premultiplied:
-            *order = QSysInfo::ByteOrder == QSysInfo::LittleEndian ? MCO_BGRA : MCO_ARGB;
-            break;
-#if QT_VERSION >= 0x050200
-        case QImage::Format_RGBX8888:
-        case QImage::Format_RGBA8888:
-        case QImage::Format_RGBA8888_Premultiplied:
-            *order = MCO_RGBA;
-            break;
-#endif
-        default:
-            *order = MCO_BGR;
-            break;
-        }
-    }
-
-    return mat;
-}
-
-/* Convert QImage to cv::Mat
- */
-cv::Mat image2Mat(const QImage &img, int requiredMatType, MatColorOrder requriedOrder)
-{
-    int targetDepth = CV_MAT_DEPTH(requiredMatType);
-    int targetChannels = CV_MAT_CN(requiredMatType);
-    Q_ASSERT(targetChannels==CV_CN_MAX || targetChannels==1 || targetChannels==3 || targetChannels==4);
-    Q_ASSERT(targetDepth==CV_8U || targetDepth==CV_16U || targetDepth==CV_32F);
-
     MatColorOrder srcOrder;
-    cv::Mat mat0 = image2Mat_shared(img, &srcOrder);
+    cv::Mat mat0 = image2Mat_shared(image, &srcOrder);
 
     //Adjust mat channells if needed.
     cv::Mat mat_adjustCn;
@@ -306,68 +198,6 @@ cv::Mat image2Mat(const QImage &img, int requiredMatType, MatColorOrder requried
     return mat_adjustDepth;
 }
 
-/* Convert cv::Mat to QImage, user should make sure that,
- * the color channels order is the same as the color channels
- * order requried by QImage.
- */
-QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint)
-{
-    Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
-    Q_ASSERT(mat.depth()==CV_8U || mat.depth()==CV_16U || mat.depth()==CV_32F);
-
-    if (mat.empty())
-        return QImage();
-
-    //Find proper image format based on Mat channels and format hint.
-    QImage::Format format = formatHint;
-    switch (mat.channels()) {
-    case 1:
-        format = QImage::Format_Indexed8;
-        break;
-    case 3:
-        format = QImage::Format_RGB888;
-        break;
-    case 4:
-        if (formatHint != QImage::Format_RGB32
-                && formatHint != QImage::Format_ARGB32
-                && formatHint != QImage::Format_ARGB32_Premultiplied
-        #if QT_VERSION >= 0x050200
-                && formatHint != QImage::Format_RGBX8888
-                && formatHint != QImage::Format_RGBA8888
-                && formatHint != QImage::Format_RGBA8888_Premultiplied
-        #endif
-                ) {
-            format = QImage::Format_ARGB32;
-        }
-        break;
-    default:
-        return QImage();
-    }
-
-    QImage outImage;
-    switch (mat.depth()) {
-    case CV_8U:
-        outImage = mat2Image_<uchar>(mat, format, 1.0);
-        break;
-    case CV_16U:
-        outImage = mat2Image_<quint16>(mat, format, 255./65535.);
-        break;
-    case CV_32F:
-        outImage = mat2Image_<float>(mat, format, 255.);
-        break;
-    default:
-        break;
-    }
-
-    if (format == QImage::Format_Indexed8) {
-        QVector<QRgb> colorTable;
-        for (int i=0; i<256; ++i)
-            colorTable.append(qRgb(i,i,i));
-        outImage.setColorTable(colorTable);
-    }
-    return outImage;
-}
-
 /* Convert cv::Mat to QImage
  */
 QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatHint)
@@ -435,7 +265,7 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatH
 
     cv::Mat mat_adjustDepth;
     mat_adjustCn.convertTo(mat_adjustDepth, CV_8UC(mat_adjustCn.channels()), mat.depth() == CV_16U ? 1/255.0 : 255.0);
-    return mat2Image(mat_adjustDepth, format).copy();
+    return mat2Image_shared(mat_adjustDepth, format).copy();
 }
 
 /* Convert QImage to cv::Mat without data copy

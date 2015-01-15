@@ -106,15 +106,11 @@ private Q_SLOTS:
 
     void testMat2QImage_data();
     void testMat2QImage();
-    void testMat2QImage_2_data();
-    void testMat2QImage_2();
     void testMat2QImageShared_data();
     void testMat2QImageShared();
 
     void testQImage2Mat_data();
     void testQImage2Mat();
-    void testQImage2Mat_2_data();
-    void testQImage2Mat_2();
     void testQImage2MatShared_data();
     void testQImage2MatShared();
 
@@ -255,55 +251,6 @@ void CvMatAndImageTest::testMatChannelsOrder()
 void CvMatAndImageTest::testMat2QImage_data()
 {
     QTest::addColumn<cv::Mat>("mat");
-    QTest::addColumn<QImage::Format>("formatHint");
-    QTest::addColumn<QImage>("expect");
-
-    //Test data: C1 ==> Indexed8
-    QTest::newRow("8UC1_Invalid") << mat_8UC1 << QImage::Format_Invalid << image_indexed8;
-    QTest::newRow("8UC1_Indexed8") << mat_8UC1 << QImage::Format_Indexed8 << image_indexed8;
-    QTest::newRow("16UC1") << mat_16UC1 << QImage::Format_Indexed8 << image_indexed8;
-    QTest::newRow("32FC1") << mat_32FC1 << QImage::Format_Indexed8 << image_indexed8;
-
-    //Test data: C3 ==> RGB8888
-    QTest::newRow("8UC3(RGB)_Invalid") << mat_8UC3_rgb << QImage::Format_Invalid << image_rgb888;
-    QTest::newRow("8UC3(RGB)_RGB888") << mat_8UC3_rgb << QImage::Format_RGB888 << image_rgb888;
-    QTest::newRow("16UC3(RGB)") << mat_16UC3_rgb << QImage::Format_RGB888 << image_rgb888;
-    QTest::newRow("32FC3(RGB)") << mat_32FC3_rgb << QImage::Format_RGB888 << image_rgb888;
-
-    //Test data: C4 ==> ARGB32
-    if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
-        QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_bgra << QImage::Format_Invalid << image_argb32;
-        QTest::newRow("8UC4_ARGB32") << mat_8UC4_bgra << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("16UC4_ARGB32") << mat_16UC4_bgra << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("32FC4_ARGB32") << mat_32FC4_bgra << QImage::Format_ARGB32 << image_argb32;
-    } else {
-        QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_argb << QImage::Format_Invalid << image_argb32;
-        QTest::newRow("8UC4_ARGB32") << mat_8UC4_argb << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("16UC4_ARGB32") << mat_16UC4_argb << QImage::Format_ARGB32 << image_argb32;
-        QTest::newRow("32FC4_ARGB32") << mat_32FC4_argb << QImage::Format_ARGB32 << image_argb32;
-    }
-
-#if QT_VERSION >= 0x050200
-    //Test data: C4 ==> RGBA8888
-    QTest::newRow("8UC4_RGBA8888") << mat_8UC4_rgba << QImage::Format_RGBA8888 << image_rgba8888;
-    QTest::newRow("16UC4_RGBA8888") << mat_16UC4_rgba << QImage::Format_RGBA8888 << image_rgba8888;
-    QTest::newRow("32FC4_RGBA8888") << mat_32FC4_rgba << QImage::Format_RGBA8888 << image_rgba8888;
-#endif
-}
-
-void CvMatAndImageTest::testMat2QImage()
-{
-    QFETCH(cv::Mat, mat);
-    QFETCH(QImage::Format, formatHint);
-    QFETCH(QImage, expect);
-
-    QImage convertedImage = mat2Image(mat, formatHint);
-    QVERIFY(lenientCompare(convertedImage, expect));
-}
-
-void CvMatAndImageTest::testMat2QImage_2_data()
-{
-    QTest::addColumn<cv::Mat>("mat");
     QTest::addColumn<MatColorOrder>("mcOrder");
     QTest::addColumn<QImage::Format>("formatHint");
     QTest::addColumn<QImage>("expect");
@@ -348,7 +295,7 @@ void CvMatAndImageTest::testMat2QImage_2_data()
 #endif
 }
 
-void CvMatAndImageTest::testMat2QImage_2()
+void CvMatAndImageTest::testMat2QImage()
 {
     QFETCH(cv::Mat, mat);
     QFETCH(MatColorOrder, mcOrder);
@@ -401,65 +348,6 @@ void CvMatAndImageTest::testMat2QImageShared()
 void CvMatAndImageTest::testQImage2Mat_data()
 {
     QTest::addColumn<QImage>("image");
-    QTest::addColumn<int>("matDepth");
-    QTest::addColumn<cv::Mat>("expect");
-    QTest::addColumn<MatColorOrder>("expectedOrder");
-
-    //Test data: Indexed8 ==> C1
-    QTest::newRow("Indexed8_8UC1") << image_indexed8 << CV_8U << mat_8UC1 << MCO_BGR;
-    QTest::newRow("Indexed8_16UC1") << image_indexed8 << CV_16U << mat_16UC1 << MCO_BGR;
-    QTest::newRow("Indexed8_32FC1") << image_indexed8 << CV_32F << mat_32FC1 << MCO_BGR;
-
-    //Test data: RGB888 ==> C3
-    QTest::newRow("RGB8888_8UC3") << image_rgb888 << CV_8U << mat_8UC3_rgb << MCO_RGB;
-    QTest::newRow("RGB8888_16UC3") << image_rgb888 << CV_16U << mat_16UC3_rgb << MCO_RGB;
-    QTest::newRow("RGB8888_32FC3") << image_rgb888 << CV_32F << mat_32FC3_rgb << MCO_RGB;
-
-    //Test data: ARGB32 ==> C4
-    if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
-        QTest::newRow("ARGB32_8UC4") << image_argb32 << CV_8U << mat_8UC4_bgra << MCO_BGRA;
-        QTest::newRow("ARGB32_16UC4") << image_argb32 << CV_16U << mat_16UC4_bgra << MCO_BGRA;
-        QTest::newRow("ARGB32_32FC4") << image_argb32 << CV_32F << mat_32FC4_bgra << MCO_BGRA;
-    } else {
-        QTest::newRow("ARGB32_8UC4") << image_argb32 << CV_8U << mat_8UC4_argb << MCO_ARGB;
-        QTest::newRow("ARGB32_16UC4") << image_argb32 << CV_16U << mat_16UC4_argb << MCO_ARGB;
-        QTest::newRow("ARGB32_32FC4") << image_argb32 << CV_32F << mat_32FC4_argb << MCO_ARGB;
-    }
-
-#if QT_VERSION >= 0x050200
-    //Test data: RGBA8888 ==> C4
-    QTest::newRow("RGBA8888_8UC4") << image_rgba8888 << CV_8U << mat_8UC4_rgba << MCO_RGBA;
-    QTest::newRow("RGBA8888_16UC4") << image_rgba8888 << CV_16U << mat_16UC4_rgba << MCO_RGBA;
-    QTest::newRow("RGBA8888_32FC4") << image_rgba8888 << CV_32F << mat_32FC4_rgba << MCO_RGBA;
-#endif
-}
-
-void CvMatAndImageTest::testQImage2Mat()
-{
-    QFETCH(QImage, image);
-    QFETCH(int, matDepth);
-    QFETCH(cv::Mat, expect);
-    QFETCH(MatColorOrder, expectedOrder);
-
-    QtOcv::MatColorOrder order;
-    cv::Mat mat = image2Mat(image, &order, matDepth);
-
-    if (mat.channels() > 1)
-        QCOMPARE(order, expectedOrder);
-
-    if (mat.depth() == CV_8U)
-        QVERIFY(lenientCompare<uchar>(mat, expect));
-    else if (mat.depth() == CV_16U)
-        QVERIFY(lenientCompare<quint16>(mat, expect));
-    else if (mat.depth() == CV_32F)
-        QVERIFY(lenientCompare<float>(mat, expect));
-    else
-        QVERIFY(false);
-}
-
-void CvMatAndImageTest::testQImage2Mat_2_data()
-{
-    QTest::addColumn<QImage>("image");
     QTest::addColumn<MatColorOrder>("order");
     QTest::addColumn<int>("matType");
     QTest::addColumn<cv::Mat>("expect");
@@ -496,7 +384,7 @@ void CvMatAndImageTest::testQImage2Mat_2_data()
 #endif
 }
 
-void CvMatAndImageTest::testQImage2Mat_2()
+void CvMatAndImageTest::testQImage2Mat()
 {
     QFETCH(QImage, image);
     QFETCH(MatColorOrder, order);

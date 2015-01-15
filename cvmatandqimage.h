@@ -58,31 +58,6 @@ enum MatColorOrder {
 cv::Mat image2Mat(const QImage &img, int requiredMatType = CV_8UC(0), MatColorOrder requiredOrder=MCO_BGR);
 QImage mat2Image(const cv::Mat &mat, MatColorOrder order=MCO_BGR, QImage::Format formatHint = QImage::Format_Invalid);
 
-/* Convert QImage to/from cv::Mat
- *
- * - Channels of cv::Mat should be 1, 3, 4
- *
- * - All other image formats should be converted to one of following formats.
- *   - QImage::Format_Indexed8                 <==> CV_8UC1 CV_16UC1 CV_32FC1
- *   - QImage::Format_RGB888                   <==> CV_8UC3 CV_16UC3 CV_32FC3 (R G B)
- *   - QImage::Format_ARGB32                   <==> CV_8UC4 CV_16UC4 CV_32FC4 (B G R A) or (A R G B)
- *   - QImage::Format_RGB32                    <==> CV_8UC4 CV_16UC4 CV_32FC4 (B G R A) or (A R G B)
- *   - QImage::Format_ARGB32_Premultiplied     <==> CV_8UC4 CV_16UC4 CV_32FC4 (B G R A) or (A R G B)
- *   - QImage::Format_RGBA8888                 <==> CV_8UC4 CV_16UC4 CV_32FC4 (R G B A)
- *   - QImage::Format_RGBX8888                 <==> CV_8UC4 CV_16UC4 CV_32FC4 (R G B A)
- *   - QImage::Format_RGBA8888_Premultiplied   <==> CV_8UC4 CV_16UC4 CV_32FC4 (R G B A)
- *   - QImage::Format_Invalid(means auto selection)
- *
- * - For QImage::Format_RGB32 and QImage::Format_ARGB32,
- *   the color channel order of cv::Mat will be (B G R A) in
- *   little endian system or (A R G B) in big endian system.
- *
- * - User must make sure that the color channels order is the same as
- *   the color channels order requried by QImage.
- */
-cv::Mat image2Mat(const QImage &img, MatColorOrder *order, int matDepth = CV_8U);
-QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint);
-
 /* Convert QImage to/from cv::Mat without data copy
  *
  * - Supported QImage formats and cv::Mat types are:
