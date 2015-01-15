@@ -310,6 +310,9 @@ cv::Mat image2Mat(const QImage &img, int requiredMatType, MatColorOrder requried
  */
 QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint)
 {
+    Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
+    Q_ASSERT(mat.depth()==CV_8U || mat.depth()==CV_16U || mat.depth()==CV_32F);
+
     if (mat.empty())
         return QImage();
 
@@ -368,7 +371,7 @@ QImage mat2Image(const cv::Mat &mat, QImage::Format formatHint)
 QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatHint)
 {
     Q_ASSERT(mat.channels()==1 || mat.channels()==3 || mat.channels()==4);
-    Q_ASSERT(mat.depth()==CV_8U || mat.depth()==CV_16U || mat.depth()==CV_32S || mat.depth()==CV_32F);
+    Q_ASSERT(mat.depth()==CV_8U || mat.depth()==CV_16U || mat.depth()==CV_32F);
 
     if (mat.empty())
         return QImage();

@@ -15,8 +15,18 @@
     namespace QtOcv {
         /* Convert QImage to/from cv::Mat
          *
-         * - Channels of cv::Mat should be 1, 3, 4
-         * - Depth of cv::Mat should be 8U, 16U or 32F
+         * - cv::Mat
+         *   - Supported channels
+         *     - 1 channel
+         *     - 3 channels (B G R), (R G B)
+         *     - 4 channels (B G R A), (R G B A), (A R G B)
+         *   - Supported depth
+         *     - CV_8U  [0, 255]
+         *     - CV_16U [0, 65535]
+         *     - CV_32F [0, 1.0]
+         *
+         * - QImage
+         *   - All of the formats of QImage are supported.
          */
         cv::Mat image2Mat(const QImage &img, int matType = CV_8UC(0), MatColorOrder order=MCO_BGR);
         QImage mat2Image(const cv::Mat &mat, MatColorOrder order=MCO_BGR, QImage::Format formatHint = QImage::Format_Invalid);
@@ -153,7 +163,6 @@ If the depth of the image is 32, the following function can be used too.
 ```
     CV_8U   [0, 255]
     CV_16U  [0, 255*256]
-    CV_32S  [0, 255*256]
     CV_32F  [0.0, 1.0]
 ```
 
