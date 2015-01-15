@@ -2,13 +2,12 @@
 
  * QtOpenCV provides some helper functions to converting cv::Mat from/to QImage.
 
- * QtOpenCV provides a QtOpenCV.pri file which can be used to integrate OpenCV2 to qmake-based project
-
- **Note: OpenCV2.2 or newer is needed.**
+ * QtOpenCV provides a QtOpenCV.pri file which can be used to integrate OpenCV2.2 or newer to qmake-based project.
 
 ## cv::Mat <==> QImage
 
- * Copy cvmatandqimage{.cpp .h} to your project's source tree.
+ * Download and copy the ```cvmatandqimage.cpp``` ```cvmatandqimage.h``` to your project's source tree.
+
  * Then take advantage of the following API to converting data between Cv::Mat and QImage.
 
 ```cpp
@@ -33,8 +32,11 @@
     }
 ```
 
- * In addition, two other functions are provided which works more efficient when operating on `CV_8UC1`, `CV_8UC3` or `CV_8UC4`
-   But users must make sure that the color channels order is the same as the color channels order requried by QImage.
+ * In addition, two other functions are provided which works more efficient when operating on `CV_8UC1`, `CV_8UC3(R G B)`
+   `CV_8UC4(R G B A)`, `CV_8UC4(B G R A)` or `CV_8UC4(A R G B)`.  But
+
+   * Users must make sure that the color channels order is the same as the color channels order required by QImage.
+   * Users must make sure that the source cv::Mat or QImage is living when the shared QImage or cv::Mat is used.
 
 ```cpp
     namespace QtOcv {
@@ -55,11 +57,43 @@
          *   endian system or (A R G B) in big endian system.
          *
          * - User must make sure that the color channels order is the same as
-         *   the color channels order requried by QImage.
+         *   the color channels order required by QImage.
          */
         cv::Mat image2Mat_shared(const QImage &img, MatColorOrder *order=0);
         QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint = QImage::Format_Invalid);
     } //namespace QtOcv
+```
+
+### Shared or Not Shared?
+Generally speaking, the non-shared API are easy to use, and not easy to get wrong. Nevertheless, users may find that
+the shared API will be useful in some cases.
+
+For example, when you want to convert a cv::Mat object with the type `CV_8UC3` (R G B) to an QImage object with the format
+`QImage::Foramt_RGB888`, or vice versa, the shared API can be used.
+
+```
+QImage image1 = mat2Image_shared(mat1);
+cv::Mat mat2 = image2Mat_shared(image2);
+```
+
+This is especially useful when a temporarily object is needed, take QPixmap as an example,
+
+```
+QPixmap pixmap = QPixmap::fromImage(mat2Image_shared(mat1));
+```
+
+Note, when a deep copy is needed, you can still use the shared API in following way
+
+```
+QImage image1 = mat2Image_shared(mat1).copy();
+cv::Mat mat2 = image2Mat_shared(image2).clone();
+```
+
+but, in such cases, the non-shared API will be more appropriate
+
+```
+QImage image1 = mat2Image(mat1, MCO_RGB);
+cv::Mat mat2 = image2Mat(image2, CV_8UC3, MCO_RGB);
 ```
 
 ### Some thing you need to know
@@ -70,8 +104,8 @@ The manual of OpenCV says that,
 
 * cv::imwrite()
 
-Only 8-bit (or 16-bit unsigned(CV_16U) in case of PNG,JPEG
-2000,and TIFF) single-channel or **3-channel(with‘BGR’channel order)** images can be saved using this function.
+Only 8-bit (or 16-bit unsigned(`CV_16U`) in case of PNG,JPEG
+2000,and TIFF) single-channel or **3-channel(with 'BGR' channel order)** images can be saved using this function.
 
 It is possible to store PNG images with an alpha channel using this function. To do this, create 8-bit (or 16-bit) **4-chanel image BGRA**, where the alpha channel goes last.
 
@@ -79,7 +113,7 @@ It is possible to store PNG images with an alpha channel using this function. To
 
 In the case of color images, the decoded images will have the **channels stored in  B G R order** .
 
-**Note:** If you don't care opencv_highgui module, you can always use the same channels order as QImage.
+**Note:** If you don't care `opencv_highgui` module, you can always use the same channels order as QImage, which will be slightly fast.
 
 #### Data bytes order of QImage
 
@@ -174,7 +208,7 @@ If OpenCV2 doesn't installed in the standard directory, header files paths and l
    qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
 ```
 
- * using the third and forth param of add_opencv_modules()
+ * using the third and forth param of `add_opencv_modules()`
 
 ```
     add_opencv_modules(core imgproc highgui, 2.4.3, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
@@ -182,7 +216,7 @@ If OpenCV2 doesn't installed in the standard directory, header files paths and l
 
 [ **Note that** , more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
 
- * set project variable before call add_opencv_modules
+ * set project variable before call `add_opencv_modules`
 
 ```
     OPENCV_VERSION = 2.4.3
