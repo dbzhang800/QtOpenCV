@@ -4,4 +4,5 @@ SUBDIRS += \
     imagefft \
     capture \
     cannyedgedetector \
-    colorchannel
+    colorchannel \
+    simple

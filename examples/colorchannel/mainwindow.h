@@ -17,6 +17,7 @@ public:
 
 private slots:
     void on_action_Open_triggered();
+    void onColorUnderMouseChanged(const QColor &c);
 
 private:
     Ui::MainWindow *ui;

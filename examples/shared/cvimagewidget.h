@@ -41,6 +41,7 @@ public:
     bool isMouseWheelEnabled() const;
 
     QPixmap pixmap() const;
+    QColor colorUnderMouse() const;
 
 public slots:
     void setCurrentScale(double currentScale);
@@ -53,9 +54,12 @@ public slots:
 signals:
     void scaleChanged(double scale);
     void realScaleChanged(double scale);
+    void colorUnderMouseChanged(const QColor &color);
 
 protected:
     void wheelEvent(QWheelEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void leaveEvent(QEvent *event);
     void resizeEvent(QResizeEvent *event);
 
 private:

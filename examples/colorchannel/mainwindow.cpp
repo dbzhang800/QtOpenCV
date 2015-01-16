@@ -15,11 +15,24 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    connect(ui->originImageWidget, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
+    connect(ui->rImageWidget, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
+    connect(ui->gImageWidget, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
+    connect(ui->bImageWidget, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::onColorUnderMouseChanged(const QColor &c)
+{
+    if (c.isValid())
+        statusBar()->showMessage(QString("R %1 G %2 B %3").arg(c.red()).arg(c.green()).arg(c.blue()));
+    else
+        statusBar()->clearMessage();
 }
 
 void MainWindow::on_action_Open_triggered()

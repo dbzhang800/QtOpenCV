@@ -28,6 +28,7 @@
 #include <QWheelEvent>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
+#include <QPointF>
 #include <QDebug>
 
 #include <math.h>
@@ -42,10 +43,13 @@ public:
 
     void dealWithScaleChanged(double rSacle, bool causedByWheel=true);
     void doAutoFit();
+    QColor getColorUnderMouse();
 
     double m_scale;  //on work when view rotate 0, 90, 180, 270
     double m_scaleMax;
     double m_scaleMin;
+
+    QColor m_lastColor;
 
     bool m_wheelScaleEnabled;
     bool m_autoAdjustEnabled;
@@ -95,6 +99,15 @@ void ImageWidgetPrivate::doAutoFit()
     emit q->realScaleChanged(m_scale);
 }
 
+QColor ImageWidgetPrivate::getColorUnderMouse()
+{
+    QPoint pos = q->mapToScene(q->mapFromGlobal(QCursor::pos())).toPoint();
+    QColor c;
+    if (q->scene()->sceneRect().contains(pos))
+        c = QColor(q->pixmap().copy(pos.x(), pos.y(), 1, 1).toImage().pixel(0, 0));
+    return c;
+}
+
 /*!
   \class QtOcv::ImageWidget
 */
@@ -111,6 +124,7 @@ ImageWidget::ImageWidget(QWidget *parent)
     setScene(sc);
     setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
     setDragMode(ScrollHandDrag);
+    setMouseTracking(true);
 
 //    QPixmap pix(512, 512);
 //    pix.fill(Qt::gray);
@@ -127,9 +141,20 @@ QPixmap ImageWidget::pixmap() const
     return d->m_pixmapItem->pixmap();
 }
 
+QColor ImageWidget::colorUnderMouse() const
+{
+    return d->m_lastColor;
+}
+
 void ImageWidget::setPixmap(const QPixmap &pixmap)
 {
     d->m_pixmapItem->setPixmap(pixmap);
+
+    QColor c = d->getColorUnderMouse();
+    if (c != d->m_lastColor) {
+        d->m_lastColor = c;
+        emit colorUnderMouseChanged(c);
+    }
 
     if (scene()->sceneRect() != d->m_pixmapItem->boundingRect()) {
         scene()->setSceneRect(d->m_pixmapItem->boundingRect());
@@ -236,6 +261,26 @@ void ImageWidget::wheelEvent(QWheelEvent *event)
     }
 
     //QGraphicsView::wheelEvent(event);
+}
+
+void ImageWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    QColor c = d->getColorUnderMouse();
+    if (c != d->m_lastColor) {
+        d->m_lastColor = c;
+        emit colorUnderMouseChanged(c);
+    }
+
+    QGraphicsView::mouseMoveEvent(event);
+}
+
+void ImageWidget::leaveEvent(QEvent *event)
+{
+    if (d->m_lastColor.isValid()) {
+        d->m_lastColor = QColor();
+        emit colorUnderMouseChanged(QColor());
+    }
+    QGraphicsView::leaveEvent(event);
 }
 
 void ImageWidget::resizeEvent(QResizeEvent *event)
