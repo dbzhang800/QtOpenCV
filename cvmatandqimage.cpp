@@ -63,10 +63,12 @@ cv::Mat image2Mat(const QImage &img, int requiredMatType, MatColorOrder requried
     QImage image;
     switch (img.format()) {
     case QImage::Format_Indexed8:
-    case QImage::Format_RGB888:
     case QImage::Format_RGB32:
     case QImage::Format_ARGB32:
     case QImage::Format_ARGB32_Premultiplied:
+#if QT_VERSION >= 0x040400
+    case QImage::Format_RGB888:
+#endif
 #if QT_VERSION >= 0x050200
     case QImage::Format_RGBX8888:
     case QImage::Format_RGBA8888:
@@ -78,10 +80,13 @@ cv::Mat image2Mat(const QImage &img, int requiredMatType, MatColorOrder requried
     case QImage::Format_MonoLSB:
         image = img.convertToFormat(QImage::Format_Indexed8);
         break;
+    case QImage::Format_RGB16:
+        image = img.convertToFormat(QImage::Format_RGB32);
+        break;
+#if QT_VERSION > 0x040400
     case QImage::Format_RGB444:
     case QImage::Format_RGB555:
     case QImage::Format_RGB666:
-    case QImage::Format_RGB16:
         image = img.convertToFormat(QImage::Format_RGB888);
         break;
     case QImage::Format_ARGB4444_Premultiplied:
@@ -90,6 +95,7 @@ cv::Mat image2Mat(const QImage &img, int requiredMatType, MatColorOrder requried
     case QImage::Format_ARGB8565_Premultiplied:
         image = img.convertToFormat(QImage::Format_ARGB32_Premultiplied);
         break;
+#endif
     default:
         image = img.convertToFormat(QImage::Format_ARGB32);
         break;
@@ -214,9 +220,19 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatH
     if (mat.channels() == 1) {
         format = QImage::Format_Indexed8;
     } else if (mat.channels() == 3) {
+#if QT_VERSION >= 0x040400
         format = QImage::Format_RGB888;
         if (order == MCO_BGR)
             cv::cvtColor(mat, mat_adjustCn, CV_BGR2RGB);
+#else
+        format = QImage::Format_RGB32;
+        cv::Mat mat_tmp;
+        cv::cvtColor(mat, mat_tmp, order == MCO_BGR ? CV_BGR2BGRA : CV_RGB2BGRA);
+        if (QSysInfo::ByteOrder == QSysInfo::LittleEndian)
+            mat_adjustCn = mat_tmp;
+        else
+            mat_adjustCn = argb2bgra(mat_tmp);
+#endif
     } else if (mat.channels() == 4) {
         if (order == MCO_RGBA) {
 #if QT_VERSION >= 0x050200
@@ -277,10 +293,13 @@ cv::Mat image2Mat_shared(const QImage &img, MatColorOrder *order)
 
     switch (img.format()) {
     case QImage::Format_Indexed8:
+        break;
+#if QT_VERSION >= 0x040400
     case QImage::Format_RGB888:
         if (order)
             *order = MCO_RGB;
         break;
+#endif
     case QImage::Format_RGB32:
     case QImage::Format_ARGB32:
     case QImage::Format_ARGB32_Premultiplied:
@@ -317,8 +336,10 @@ QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint)
         for (int i=0; i<256; ++i)
             colorTable.append(qRgb(i,i,i));
         img.setColorTable(colorTable);
+#if QT_VERSION >= 0x040400
     } else if (mat.type() == CV_8UC3) {
         img = QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+#endif
     } else if (mat.type() == CV_8UC4) {
         if (formatHint != QImage::Format_RGB32
                 && formatHint != QImage::Format_ARGB32

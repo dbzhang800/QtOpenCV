@@ -137,9 +137,11 @@ private:
     cv::Mat mat_32FC4_bgra;
 
     QImage image_indexed8;
-    QImage image_rgb888;
     QImage image_rgb32;
     QImage image_argb32;
+#if QT_VERSION >= 0x040400
+    QImage image_rgb888;
+#endif
 #if QT_VERSION >= 0x050200
     QImage image_rgbx8888;
     QImage image_rgba8888;
@@ -177,9 +179,11 @@ CvMatAndImageTest::CvMatAndImageTest()
     for (int i=0; i<256; ++i)
         colorTable.append(qRgb(i, i, i));
     image_indexed8.setColorTable(colorTable);
-    image_rgb888 = QImage(width, height, QImage::Format_RGB888);
     image_rgb32 = QImage(width, height, QImage::Format_RGB32);
     image_argb32 = QImage(width, height, QImage::Format_ARGB32);
+#if QT_VERSION >= 0x040400
+    image_rgb888 = QImage(width, height, QImage::Format_RGB888);
+#endif
 #if QT_VERSION >= 0x050200
     image_rgbx8888 = QImage(width, height, QImage::Format_RGBX8888);
     image_rgba8888 = QImage(width, height, QImage::Format_RGBA8888);
@@ -215,9 +219,11 @@ CvMatAndImageTest::CvMatAndImageTest()
             mat_32FC4_bgra.at<cv::Vec4f>(row, col) = cv::Vec4f(b/255.0, g/255.0, r/255.0, a/255.0);
 
             image_indexed8.setPixel(col, row, r);
-            image_rgb888.setPixel(col, row, qRgb(r, g, b));
             image_rgb32.setPixel(col, row, qRgb(r, g, b));
             image_argb32.setPixel(col, row, qRgba(r, g, b, a));
+#if QT_VERSION >= 0x040400
+            image_rgb888.setPixel(col, row, qRgb(r, g, b));
+#endif
 #if QT_VERSION >= 0x050200
             image_rgbx8888.setPixel(col, row, qRgb(r, g, b));
             image_rgba8888.setPixel(col, row, qRgba(r, g, b, a));
@@ -232,6 +238,7 @@ CvMatAndImageTest::~CvMatAndImageTest()
 
 void CvMatAndImageTest::testMatChannelsOrder()
 {
+#if QT_VERSION >= 0x040400
     //Save a QImage as a .png file, then load with highgui's method
     //note that the order is (B G R) instead of (R G B)
     const char* fileName1 = "tst_data1.png";
@@ -239,6 +246,7 @@ void CvMatAndImageTest::testMatChannelsOrder()
 
     cv::Mat mat = cv::imread(fileName1);
     QVERIFY(lenientCompare<uchar>(mat, mat_8UC3_bgr));
+#endif
 
     //generate a (B G R A) OpenCV Image, then save as a .png file
     const char* fileName2 = "tst_data2.png";
@@ -261,6 +269,7 @@ void CvMatAndImageTest::testMat2QImage_data()
     QTest::newRow("16UC1") << mat_16UC1 << MCO_BGR << QImage::Format_Indexed8 << image_indexed8;
     QTest::newRow("32FC1") << mat_32FC1 << MCO_BGR << QImage::Format_Indexed8 << image_indexed8;
 
+#if QT_VERSION >= 0x040400
     //Test data: C3 ==> RGB8888
     QTest::newRow("8UC3(RGB)_Invalid") << mat_8UC3_rgb << MCO_RGB << QImage::Format_Invalid << image_rgb888;
     QTest::newRow("8UC3(RGB)_RGB888") << mat_8UC3_rgb << MCO_RGB << QImage::Format_RGB888 << image_rgb888;
@@ -271,6 +280,7 @@ void CvMatAndImageTest::testMat2QImage_data()
     QTest::newRow("8UC3(BGR)_RGB888") << mat_8UC3_bgr << MCO_BGR << QImage::Format_RGB888 << image_rgb888;
     QTest::newRow("16UC3(BGR)") << mat_16UC3_bgr << MCO_BGR << QImage::Format_RGB888 << image_rgb888;
     QTest::newRow("32FC3(BGR)") << mat_32FC3_bgr << MCO_BGR << QImage::Format_RGB888 << image_rgb888;
+#endif
 
     //Test data: C4 ==> ARGB32
     QTest::newRow("8UC4(BGRA)_ARGB32_Invalid") << mat_8UC4_bgra << MCO_BGRA << QImage::Format_Invalid << image_argb32;
@@ -317,8 +327,10 @@ void CvMatAndImageTest::testMat2QImageShared_data()
     QTest::newRow("8UC1_Invalid") << mat_8UC1 << QImage::Format_Invalid << image_indexed8;
     QTest::newRow("8UC1_Indexed8") << mat_8UC1 << QImage::Format_Indexed8 << image_indexed8;
 
+#if QT_VERSION >= 0x040400
     //Test data: C3 ==> RGB8888
     QTest::newRow("8UC3_Invalid") << mat_8UC3_rgb << QImage::Format_Invalid << image_rgb888;
+#endif
 
     //Test data: C4 ==> ARGB32
     if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
@@ -357,6 +369,7 @@ void CvMatAndImageTest::testQImage2Mat_data()
     QTest::newRow("Indexed8_16UC1") << image_indexed8 << MCO_BGR << CV_16UC1 << mat_16UC1;
     QTest::newRow("Indexed8_32FC1") << image_indexed8 << MCO_BGR << CV_32FC1 << mat_32FC1;
 
+#if QT_VERSION >= 0x040400
     //Test data: RGB888 ==> C3
     QTest::newRow("RGB888_8UC3(RGB)") << image_rgb888 << MCO_RGB << CV_8UC3 << mat_8UC3_rgb;
     QTest::newRow("RGB888_16UC3(RGB)") << image_rgb888 << MCO_RGB << CV_16UC3 << mat_16UC3_rgb;
@@ -364,6 +377,7 @@ void CvMatAndImageTest::testQImage2Mat_data()
     QTest::newRow("RGB888_8UC3(BGR)") << image_rgb888 << MCO_BGR << CV_8UC3 << mat_8UC3_bgr;
     QTest::newRow("RGB888_16UC3(BGR)") << image_rgb888 << MCO_BGR << CV_16UC3 << mat_16UC3_bgr;
     QTest::newRow("RGB888_32FC3(BGR)") << image_rgb888 << MCO_BGR << CV_32FC3 << mat_32FC3_bgr;
+#endif
 
     //Test data: ARGB32 ==> C4
     QTest::newRow("ARGB32_8UC4(BGRA)") << image_argb32 << MCO_BGRA << CV_8UC4 << mat_8UC4_bgra;
@@ -410,8 +424,10 @@ void CvMatAndImageTest::testQImage2MatShared_data()
     //Test data: Indexed8 ==> C1
     QTest::newRow("Indexed8_8UC1") << image_indexed8 << mat_8UC1;
 
+#if QT_VERSION >= 0x040400
     //Test data: RGB8888 ==> C3
     QTest::newRow("RGB8888_8UC3") << image_rgb888 << mat_8UC3_rgb;
+#endif
 
     //Test data: ARGB32 ==> C4
     if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
