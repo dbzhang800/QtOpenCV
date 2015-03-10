@@ -101,10 +101,12 @@ void ImageWidgetPrivate::doAutoFit()
 
 QColor ImageWidgetPrivate::getColorUnderMouse()
 {
-    QPoint pos = q->mapToScene(q->mapFromGlobal(QCursor::pos())).toPoint();
     QColor c;
-    if (q->scene()->sceneRect().contains(pos))
-        c = QColor(q->pixmap().copy(pos.x(), pos.y(), 1, 1).toImage().pixel(0, 0));
+    if (!m_pixmapItem->pixmap().isNull()) {
+        QPoint pos = q->mapToScene(q->mapFromGlobal(QCursor::pos())).toPoint();
+        if (q->scene()->sceneRect().contains(pos))
+            c = QColor(q->pixmap().copy(pos.x(), pos.y(), 1, 1).toImage().pixel(0, 0));
+    }
     return c;
 }
 
@@ -150,17 +152,20 @@ void ImageWidget::setPixmap(const QPixmap &pixmap)
 {
     d->m_pixmapItem->setPixmap(pixmap);
 
-    QColor c = d->getColorUnderMouse();
-    if (c != d->m_lastColor) {
-        d->m_lastColor = c;
-        emit colorUnderMouseChanged(c);
-    }
-
     if (scene()->sceneRect() != d->m_pixmapItem->boundingRect()) {
+        //Be careful.
+        //Note that, when pixmap isNull, the sceneRect() is not null,
+        //though setSceneRect(QRectF()) is called.
         scene()->setSceneRect(d->m_pixmapItem->boundingRect());
 
         if (d->m_autoAdjustEnabled)
             d->doAutoFit();
+    }
+
+    QColor c = d->getColorUnderMouse();
+    if (c != d->m_lastColor) {
+        d->m_lastColor = c;
+        emit colorUnderMouseChanged(c);
     }
 }
 
