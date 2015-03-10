@@ -5,4 +5,5 @@ SUBDIRS += \
     capture \
     cannyedgedetector \
     colorchannel \
-    simple
+    simple \
+    imageprocess
