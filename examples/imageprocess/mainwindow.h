@@ -26,6 +26,7 @@ private slots:
     void onFileSaveAsActionTriggered();
     void onImageActionTriggered();
     void onFilterApplyButtonClicked();
+    void onColorUnderMouseChanged(const QColor &c);
 
 private:
     void closeEvent(QCloseEvent *evt);

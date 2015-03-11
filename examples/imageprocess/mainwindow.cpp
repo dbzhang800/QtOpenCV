@@ -45,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(onFileSaveActionTriggered()));
     connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(onFileSaveAsActionTriggered()));
     connect(ui->filterApplyButton, SIGNAL(clicked()), SLOT(onFilterApplyButtonClicked()));
+    connect(ui->originalView, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
+    connect(ui->processView, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
     ui->filterDockWidget->setEnabled(false);
     loadSettings();
 }
@@ -163,6 +165,14 @@ void MainWindow::onFilterApplyButtonClicked()
     m_convert->applyTo(m_originalMat, m_processMat);
     ui->processView->setImage(QtOcv::mat2Image_shared(m_processMat));
     qApp->restoreOverrideCursor();
+}
+
+void MainWindow::onColorUnderMouseChanged(const QColor &c)
+{
+    if (c.isValid())
+        statusBar()->showMessage(QString("R %1 G %2 B %3").arg(c.red()).arg(c.green()).arg(c.blue()));
+    else
+        statusBar()->clearMessage();
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt)
