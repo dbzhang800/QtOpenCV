@@ -3,13 +3,14 @@
 
 #include <QMainWindow>
 #include <QMap>
+#include <QSharedPointer>
 #include "cvmatandqimage.h"
 
 namespace Ui {
 class MainWindow;
 }
 class RecentFiles;
-
+class AbstractConvert;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -21,6 +22,8 @@ public:
 private slots:
     void onFileOpenActionTriggered();
     void onRecentFilesTriggered(const QString &filePath);
+    void onFileSaveActionTriggered();
+    void onFileSaveAsActionTriggered();
     void onImageActionTriggered();
     void onFilterApplyButtonClicked();
 
@@ -30,7 +33,6 @@ private:
     void saveSettings();
     void createImageAction(int id, const QString &text);
     void createImageActions();
-    void createFilterWidgets();
     void doOpen(const QString &filePath);
 
     Ui::MainWindow *ui;
@@ -38,7 +40,7 @@ private:
     QMap<int, QAction*> m_imageActions;
     cv::Mat m_originalMat;
     cv::Mat m_processMat;
-    int m_filterId;
+    QSharedPointer<AbstractConvert> m_convert;
 };
 
 #endif // MAINWINDOW_H

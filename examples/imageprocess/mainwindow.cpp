@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "recentfiles.h"
+#include "convert.h"
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -11,32 +12,39 @@
 
 enum
 {
-    ConvertToGray,
+    E_ConvertToGray,
     //vvvvvvvvv
-    BilateralFilter,
-    Blur,
-    BoxFilter,
-    Filter2D,
-    GaussianBlur,
-    MedianBlur,
+    E_BilateralFilter,
+    E_Blur,
+    E_BoxFilter,
+    E_Filter2D,
+    E_GaussianBlur,
+    E_MedianBlur,
+    E_THRESHOLD,
+    E_Canny,
+    E_Dilate,
+    E_Erode,
+
+    E_HoughCircles,
+    E_FitEllipse,
     //^^^^^^^^^
-    ReplaceOriginal
+    E_ReplaceOriginal
 };
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow), m_recentFiles(new RecentFiles(this)), m_filterId(-1)
+    ui(new Ui::MainWindow), m_recentFiles(new RecentFiles(this))
 {
     ui->setupUi(this);
     ui->actionRecentFiles->setMenu(m_recentFiles->menu());
 
     createImageActions();
-    createFilterWidgets();
 
     connect(m_recentFiles, SIGNAL(activated(QString)), SLOT(onRecentFilesTriggered(QString)));
     connect(ui->actionOpen, SIGNAL(triggered()), SLOT(onFileOpenActionTriggered()));
+    connect(ui->actionSave, SIGNAL(triggered()), SLOT(onFileSaveActionTriggered()));
+    connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(onFileSaveAsActionTriggered()));
     connect(ui->filterApplyButton, SIGNAL(clicked()), SLOT(onFilterApplyButtonClicked()));
-    ui->filterDockWidget->setVisible(false);
     ui->filterDockWidget->setEnabled(false);
     loadSettings();
 }
@@ -59,77 +67,102 @@ void MainWindow::onRecentFilesTriggered(const QString &filePath)
     doOpen(filePath);
 }
 
+void MainWindow::onFileSaveActionTriggered()
+{
+    if (ui->originalView->pixmap().isNull())
+        return;
+    ui->originalView->pixmap().save(m_recentFiles->mostRecentFile());
+}
+
+void MainWindow::onFileSaveAsActionTriggered()
+{
+    if (ui->originalView->pixmap().isNull())
+        return;
+
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image"), m_recentFiles->mostRecentFile(), "Images(*.png *.bmp *.jpg *.gif)");
+    if (fileName.isEmpty())
+        return;
+    ui->originalView->pixmap().save(fileName);
+}
+
 void MainWindow::onImageActionTriggered()
 {
     if (m_originalMat.empty())
         return;
 
     QAction *act = qobject_cast<QAction *>(sender());
-    m_filterId = act->property("id").toInt();
-    switch (m_filterId) {
-    case ConvertToGray:
+    int id = act->property("id").toInt();
+    m_convert.clear();
+
+    switch (id) {
+    case E_ConvertToGray:
         cv::cvtColor(m_originalMat, m_processMat, CV_RGB2GRAY);
         ui->processView->setImage(QtOcv::mat2Image_shared(m_processMat));
         break;
-    case Blur:
-        break;
-    case ReplaceOriginal:
+    case E_ReplaceOriginal:
         ui->originalView->setPixmap(ui->processView->pixmap());
-        m_originalMat = m_processMat.clone();
+        ui->processView->setPixmap(QPixmap());
+        m_originalMat = m_processMat;
+        m_processMat = cv::Mat();
+        break;
+    case E_Blur:
+        m_convert = QSharedPointer<AbstractConvert>(new Blur());
+        break;
+    case E_BilateralFilter:
+        m_convert = QSharedPointer<AbstractConvert>(new BilateralFilter);
+        break;
+    case E_BoxFilter:
+        m_convert = QSharedPointer<AbstractConvert>(new BoxFilter);
+        break;
+    case E_MedianBlur:
+        m_convert = QSharedPointer<AbstractConvert>(new MedianBlur);
+        break;
+    case E_GaussianBlur:
+        m_convert = QSharedPointer<AbstractConvert>(new GaussianBlur);
+        break;
+    case E_Filter2D:
+        break;
+    case E_THRESHOLD:
+        m_convert = QSharedPointer<AbstractConvert>(new Threshold);
+        break;
+    case E_Canny:
+        m_convert = QSharedPointer<AbstractConvert>(new Canny);
+        break;
+    case E_Dilate:
+        m_convert = QSharedPointer<AbstractConvert>(new Dilate);
+        break;
+    case E_Erode:
+        m_convert = QSharedPointer<AbstractConvert>(new Erode);
+        break;
+
+    case E_HoughCircles:
+        m_convert = QSharedPointer<AbstractConvert>(new HoughCircles);
+        break;
+    case E_FitEllipse:
+        m_convert = QSharedPointer<AbstractConvert>(new FitEllipse);
         break;
     default:
         break;
     }
 
-    bool visible = m_filterId != ConvertToGray && m_filterId != ReplaceOriginal;
-    ui->filterDockWidget->setVisible(visible);
-    ui->filterDockWidget->setEnabled(visible);
-    ui->filterDockWidget->setWindowTitle(act->text());
+    ui->filterDockWidget->setEnabled(m_convert);
+    if (m_convert) {
+        ui->filterDockWidget->setWindowTitle(act->text());
+        ui->paramsWidget->layout()->addWidget(m_convert->paramsWidget());
+    }
 
     //Update actions status.
-    m_imageActions[ConvertToGray]->setEnabled(m_originalMat.channels() > 1);
+    m_imageActions[E_ConvertToGray]->setEnabled(m_originalMat.channels() > 1);
 }
 
 void MainWindow::onFilterApplyButtonClicked()
 {
-    switch (m_filterId) {
-    case Blur:
-        cv::blur(m_originalMat, m_processMat, cv::Size(ui->filter_kSizeXEdit->value(), ui->filter_kSizeYEdit->value()),
-                 cv::Point(ui->filter_anchorXEdit->value(), ui->filter_anchorYEdit->value()),
-                 ui->filter_borderTypeEdit->currentData().toInt());
-        break;
-    case BilateralFilter:
-        cv::bilateralFilter(m_originalMat, m_processMat, ui->filter_dEdit->value(), ui->filter_sigmaColorEdit->value(),
-                            ui->filter_sigmaSpaceEdit->value(), ui->filter_borderTypeEdit->currentData().toInt());
-        break;
-    case BoxFilter:
-        cv::boxFilter(m_originalMat, m_processMat, -1, cv::Size(ui->filter_kSizeXEdit->value(), ui->filter_kSizeYEdit->value()),
-                      cv::Point(ui->filter_anchorXEdit->value(), ui->filter_anchorYEdit->value()), ui->filter_normalizeEdit->currentIndex(),
-                      ui->filter_borderTypeEdit->currentData().toInt());
-        break;
-    case Filter2D:
-    {
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(ui->filter_kSizeXEdit->value(), ui->filter_kSizeYEdit->value()),
-                      cv::Point(ui->filter_anchorXEdit->value(), ui->filter_anchorYEdit->value()));
-        cv::filter2D(m_originalMat, m_processMat, -1, kernel,
-                     cv::Point(ui->filter_anchorXEdit->value(), ui->filter_anchorYEdit->value()),
-                     ui->filter_deltaEdit->value(),
-                     ui->filter_borderTypeEdit->currentData().toInt());
-    }
-        break;
-    case GaussianBlur:
-        cv::GaussianBlur(m_originalMat, m_processMat, cv::Size(ui->filter_kSizeXEdit->value(), ui->filter_kSizeYEdit->value()),
-                         ui->filter_sigmaXEdit->value(), ui->filter_sigmaYEdit->value(),
-                         ui->filter_borderTypeEdit->currentData().toInt());
-        break;
-    case MedianBlur:
-        cv::medianBlur(m_originalMat, m_processMat, ui->filter_kSizeXEdit->value());
-        break;
-    default:
-        break;
-    }
-
+    if (!m_convert)
+        return;
+    qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
+    m_convert->applyTo(m_originalMat, m_processMat);
     ui->processView->setImage(QtOcv::mat2Image_shared(m_processMat));
+    qApp->restoreOverrideCursor();
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt)
@@ -163,28 +196,26 @@ void MainWindow::createImageAction(int id, const QString &text)
 
 void MainWindow::createImageActions()
 {
-    createImageAction(ConvertToGray, "Convert To Gray");
+    createImageAction(E_ConvertToGray, "Convert To Gray");
     ui->menuImage->addSeparator();
+    createImageAction(E_THRESHOLD, "Threshold");
 
-    createImageAction(BilateralFilter, "Bilateral Filter");
-    createImageAction(Blur, "Blur");
-    createImageAction(BoxFilter, "Box Filter");
-    createImageAction(Filter2D, "Filter2D");
-    createImageAction(GaussianBlur, "Gaussian Blur");
-    createImageAction(MedianBlur, "Median Blur");
+    createImageAction(E_BilateralFilter, "Bilateral Filter");
+    createImageAction(E_Blur, "Blur");
+    createImageAction(E_BoxFilter, "Box Filter");
+    createImageAction(E_Filter2D, "Filter2D");
+    createImageAction(E_GaussianBlur, "Gaussian Blur");
+    createImageAction(E_MedianBlur, "Median Blur");
+    createImageAction(E_Canny, "Canny");
+    createImageAction(E_Dilate, "Dilate");
+    createImageAction(E_Erode, "Erode");
 
     ui->menuImage->addSeparator();
-    createImageAction(ReplaceOriginal, "Replace Original");
-}
+    createImageAction(E_HoughCircles, "HoughCircles");
+    createImageAction(E_FitEllipse, "FitEllipse");
 
-void MainWindow::createFilterWidgets()
-{
-    ui->filter_borderTypeEdit->addItem("BORDER_DEFAULT", cv::BORDER_DEFAULT);
-    ui->filter_borderTypeEdit->addItem("BORDER_REPLICATE", cv::BORDER_REPLICATE);
-    ui->filter_borderTypeEdit->addItem("BORDER_REFLECT", cv::BORDER_REFLECT);
-    ui->filter_borderTypeEdit->addItem("BORDER_REFLECT_101", cv::BORDER_REFLECT_101);
-    ui->filter_borderTypeEdit->addItem("BORDER_WRAP", cv::BORDER_WRAP);
-    ui->filter_borderTypeEdit->addItem("BORDER_CONSTANT", cv::BORDER_CONSTANT);
+    ui->menuImage->addSeparator();
+    createImageAction(E_ReplaceOriginal, "Replace Original");
 }
 
 void MainWindow::doOpen(const QString &filePath)
@@ -202,6 +233,6 @@ void MainWindow::doOpen(const QString &filePath)
     ui->processView->setCurrentScale(0);
     bool isGray = image.isGrayscale();
     m_originalMat = QtOcv::image2Mat(image, CV_8UC(isGray ? 1 : 3), QtOcv::MCO_RGB);
-    m_imageActions[ConvertToGray]->setDisabled(isGray);
+    m_imageActions[E_ConvertToGray]->setDisabled(isGray);
     setWindowTitle(QString("%1[*] - Image Process").arg(filePath));
 }

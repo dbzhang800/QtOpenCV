@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     a.setApplicationName("OpenCV_ImageProcess");
     a.setOrganizationName("Debao");
     MainWindow w;
-    w.show();
+    w.showMaximized();
 
     return a.exec();
 }

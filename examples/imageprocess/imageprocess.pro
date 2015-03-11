@@ -11,9 +11,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    recentfiles.cpp
+    recentfiles.cpp \
+    convert.cpp
 
 HEADERS  += mainwindow.h \
-    recentfiles.h
+    recentfiles.h \
+    convert.h
 
 FORMS    += mainwindow.ui
