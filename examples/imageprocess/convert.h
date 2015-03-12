@@ -30,6 +30,18 @@ protected:
     QString m_errorString;
 };
 
+class Gray : public AbstractConvert
+{
+public:
+    Gray(){}
+    ~Gray(){}
+
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
+
+private:
+    void initParamsWidget(){}
+};
+
 class Blur : public AbstractConvert
 {
 public:

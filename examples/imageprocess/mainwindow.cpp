@@ -27,8 +27,6 @@ enum
 
     E_HoughCircles,
     E_FitEllipse,
-    //^^^^^^^^^
-    E_ReplaceOriginal
 };
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -45,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(onFileSaveActionTriggered()));
     connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(onFileSaveAsActionTriggered()));
     connect(ui->filterApplyButton, SIGNAL(clicked()), SLOT(onFilterApplyButtonClicked()));
+    connect(ui->filterPreviewButton, SIGNAL(clicked()), SLOT(onFilterPreviewButtonClicked()));
     connect(ui->originalView, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
     connect(ui->processView, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
     ui->filterDockWidget->setEnabled(false);
@@ -98,14 +97,7 @@ void MainWindow::onImageActionTriggered()
 
     switch (id) {
     case E_ConvertToGray:
-        cv::cvtColor(m_originalMat, m_processMat, CV_RGB2GRAY);
-        ui->processView->setImage(QtOcv::mat2Image_shared(m_processMat));
-        break;
-    case E_ReplaceOriginal:
-        ui->originalView->setPixmap(ui->processView->pixmap());
-        ui->processView->setPixmap(QPixmap());
-        m_originalMat = m_processMat;
-        m_processMat = cv::Mat();
+        m_convert = QSharedPointer<AbstractConvert>(new Gray());
         break;
     case E_Blur:
         m_convert = QSharedPointer<AbstractConvert>(new Blur());
@@ -147,17 +139,15 @@ void MainWindow::onImageActionTriggered()
         break;
     }
 
+    ui->processView->setPixmap(QPixmap());
     ui->filterDockWidget->setEnabled(m_convert);
     if (m_convert) {
         ui->filterDockWidget->setWindowTitle(act->text());
         ui->paramsWidget->layout()->addWidget(m_convert->paramsWidget());
     }
-
-    //Update actions status.
-    m_imageActions[E_ConvertToGray]->setEnabled(m_originalMat.channels() > 1);
 }
 
-void MainWindow::onFilterApplyButtonClicked()
+void MainWindow::onFilterPreviewButtonClicked()
 {
     if (!m_convert)
         return;
@@ -167,6 +157,17 @@ void MainWindow::onFilterApplyButtonClicked()
     else
         statusBar()->showMessage(m_convert->errorString(), 3000);
     qApp->restoreOverrideCursor();
+}
+
+void MainWindow::onFilterApplyButtonClicked()
+{
+    if (ui->processView->pixmap().isNull())
+        onFilterPreviewButtonClicked();
+
+    ui->originalView->setPixmap(ui->processView->pixmap());
+    m_originalMat = m_processMat;
+    m_processMat = cv::Mat();
+    ui->processView->setPixmap(QPixmap());
 }
 
 void MainWindow::onColorUnderMouseChanged(const QColor &c)
@@ -225,9 +226,6 @@ void MainWindow::createImageActions()
     ui->menuImage->addSeparator();
     createImageAction(E_HoughCircles, "HoughCircles");
     createImageAction(E_FitEllipse, "FitEllipse");
-
-    ui->menuImage->addSeparator();
-    createImageAction(E_ReplaceOriginal, "Replace Original");
 }
 
 void MainWindow::doOpen(const QString &filePath)
@@ -245,6 +243,5 @@ void MainWindow::doOpen(const QString &filePath)
     ui->processView->setCurrentScale(0);
     bool isGray = image.isGrayscale();
     m_originalMat = QtOcv::image2Mat(image, CV_8UC(isGray ? 1 : 3), QtOcv::MCO_RGB);
-    m_imageActions[E_ConvertToGray]->setDisabled(isGray);
     setWindowTitle(QString("%1[*] - Image Process").arg(filePath));
 }

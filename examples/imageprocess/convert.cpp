@@ -40,6 +40,17 @@ QString AbstractConvert::errorString() const
     return m_errorString;
 }
 
+
+bool Gray::applyTo(const cv::Mat &input, cv::Mat &output)
+{
+    if (input.channels() == 1) {
+        m_errorString = "not a rgb color image.";
+        return false;
+    }
+    cv::cvtColor(input, output, CV_RGB2GRAY);
+    return true;
+}
+
 Blur::Blur()
 {
 
@@ -425,3 +436,4 @@ void FitEllipse::initParamsWidget()
     QFormLayout *layout = new QFormLayout(m_widget.data());
     layout->addRow(infoEdit);
 }
+

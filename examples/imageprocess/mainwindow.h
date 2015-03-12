@@ -25,6 +25,7 @@ private slots:
     void onFileSaveActionTriggered();
     void onFileSaveAsActionTriggered();
     void onImageActionTriggered();
+    void onFilterPreviewButtonClicked();
     void onFilterApplyButtonClicked();
     void onColorUnderMouseChanged(const QColor &c);
 
