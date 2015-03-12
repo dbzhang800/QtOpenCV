@@ -44,6 +44,8 @@
          *
          * - Supported QImage formats and cv::Mat types are:
          *   - QImage::Format_Indexed8               <==> CV_8UC1
+         *   - QImage::Format_Alpha8                 <==> CV_8UC1
+         *   - QImage::Format_Grayscale8             <==> CV_8UC1
          *   - QImage::Format_RGB888                 <==> CV_8UC3 (R G B)
          *   - QImage::Format_RGB32                  <==> CV_8UC4 (A R G B or B G R A)
          *   - QImage::Format_ARGB32                 <==> CV_8UC4 (A R G B or B G R A)

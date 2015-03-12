@@ -92,6 +92,10 @@ QImage::Format findClosestFormat(QImage::Format formatHint)
     case QImage::Format_RGBA8888:
     case QImage::Format_RGBA8888_Premultiplied:
 #endif
+#if QT_VERSION >= 0x050500
+    case QImage::Format_Alpha8:
+    case QImage::Format_Grayscale8:
+#endif
         format = formatHint;
         break;
     case QImage::Format_Mono:
@@ -238,7 +242,15 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatH
     QImage::Format format;
     cv::Mat mat_adjustCn;
     if (mat.channels() == 1) {
-        format = QImage::Format_Indexed8;
+        format = formatHint;
+        if (formatHint != QImage::Format_Indexed8
+        #if QT_VERSION >= 0x050500
+                && formatHint != QImage::Format_Alpha8
+                && formatHint != QImage::Format_Grayscale8
+        #endif
+                ) {
+            format = QImage::Format_Indexed8;
+        }
     } else if (mat.channels() == 3) {
 #if QT_VERSION >= 0x040400
         format = QImage::Format_RGB888;
@@ -332,6 +344,11 @@ cv::Mat image2Mat_shared(const QImage &img, MatColorOrder *order)
             *order = MCO_RGBA;
         break;
 #endif
+#if QT_VERSION >= 0x050500
+    case QImage::Format_Alpha8:
+    case QImage::Format_Grayscale8:
+        break;
+#endif
     default:
         return cv::Mat();
     }
@@ -349,11 +366,21 @@ QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint)
 
     QImage img;
     if (mat.type() == CV_8UC1) {
-        img = QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_Indexed8);
-        QVector<QRgb> colorTable;
-        for (int i=0; i<256; ++i)
-            colorTable.append(qRgb(i,i,i));
-        img.setColorTable(colorTable);
+        if (formatHint != QImage::Format_Indexed8
+        #if QT_VERSION >= 0x050500
+                && formatHint != QImage::Format_Alpha8
+                && formatHint != QImage::Format_Grayscale8
+        #endif
+                ) {
+            formatHint = QImage::Format_Indexed8;
+        }
+        img = QImage(mat.data, mat.cols, mat.rows, mat.step, formatHint);
+        if (formatHint == QImage::Format_Indexed8) {
+            QVector<QRgb> colorTable;
+            for (int i=0; i<256; ++i)
+                colorTable.append(qRgb(i,i,i));
+            img.setColorTable(colorTable);
+        }
 #if QT_VERSION >= 0x040400
     } else if (mat.type() == CV_8UC3) {
         img = QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);

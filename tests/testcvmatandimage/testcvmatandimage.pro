@@ -1,3 +1,4 @@
+
 include (../../QtOpenCV.pri)
 
 QT       += testlib

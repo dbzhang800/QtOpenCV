@@ -155,6 +155,9 @@ private:
     cv::Mat mat_32FC4_bgrx;
 
     QImage image_indexed8;
+#if QT_VERSION >= 0x050500
+    QImage image_grayscale8;
+#endif
     QImage image_rgb32;
     QImage image_argb32;
 #if QT_VERSION >= 0x040400
@@ -207,6 +210,9 @@ CvMatAndImageTest::CvMatAndImageTest()
     for (int i=0; i<256; ++i)
         colorTable.append(qRgb(i, i, i));
     image_indexed8.setColorTable(colorTable);
+#if QT_VERSION >= 0x050500
+    image_grayscale8 = QImage(width, height, QImage::Format_Grayscale8);
+#endif
     image_rgb32 = QImage(width, height, QImage::Format_RGB32);
     image_argb32 = QImage(width, height, QImage::Format_ARGB32);
 #if QT_VERSION >= 0x040400
@@ -256,6 +262,10 @@ CvMatAndImageTest::CvMatAndImageTest()
             mat_32FC4_bgrx.at<cv::Vec4f>(row, col) = cv::Vec4f(b/255.0, g/255.0, r/255.0, 1);
 
             image_indexed8.setPixel(col, row, r);
+#if QT_VERSION >= 0x050500
+            //Note, unlike indexed8, this should be rgb value.
+            image_grayscale8.setPixel(col, row, qRgb(r,r,r));
+#endif
             image_rgb32.setPixel(col, row, qRgb(r, g, b));
             image_argb32.setPixel(col, row, qRgba(r, g, b, a));
 #if QT_VERSION >= 0x040400
@@ -305,6 +315,11 @@ void CvMatAndImageTest::testMat2QImage_data()
     QTest::newRow("8UC1_Indexed8") << mat_8UC1 << MCO_BGR << QImage::Format_Indexed8 << image_indexed8;
     QTest::newRow("16UC1") << mat_16UC1 << MCO_BGR << QImage::Format_Indexed8 << image_indexed8;
     QTest::newRow("32FC1") << mat_32FC1 << MCO_BGR << QImage::Format_Indexed8 << image_indexed8;
+
+#if QT_VERSION >= 0x050500
+    //Test data: C1 ==> Grayscale8
+    QTest::newRow("8UC1_Grayscale8") << mat_8UC1 << MCO_BGR << QImage::Format_Grayscale8 << image_grayscale8;
+#endif
 
 #if QT_VERSION >= 0x040400
     //Test data: C3 ==> RGB8888
@@ -383,6 +398,11 @@ void CvMatAndImageTest::testMat2QImageShared_data()
     QTest::newRow("8UC1_Invalid") << mat_8UC1 << QImage::Format_Invalid << image_indexed8;
     QTest::newRow("8UC1_Indexed8") << mat_8UC1 << QImage::Format_Indexed8 << image_indexed8;
 
+#if QT_VERSION >= 0x050500
+    //Test data: C1 ==> Grayscale8
+    QTest::newRow("8UC1_Grayscale8") << mat_8UC1 << QImage::Format_Grayscale8 << image_grayscale8;
+#endif
+
 #if QT_VERSION >= 0x040400
     //Test data: C3 ==> RGB8888
     QTest::newRow("8UC3_Invalid") << mat_8UC3_rgb << QImage::Format_Invalid << image_rgb888;
@@ -424,6 +444,11 @@ void CvMatAndImageTest::testQImage2Mat_data()
     QTest::newRow("Indexed8_8UC1") << image_indexed8 << MCO_BGR << CV_8UC1 << mat_8UC1;
     QTest::newRow("Indexed8_16UC1") << image_indexed8 << MCO_BGR << CV_16UC1 << mat_16UC1;
     QTest::newRow("Indexed8_32FC1") << image_indexed8 << MCO_BGR << CV_32FC1 << mat_32FC1;
+
+#if QT_VERSION >= 0x050500
+    //Test data: Grayscale8 ==> C1
+    QTest::newRow("Grayscale8_8UC1") << image_grayscale8 << MCO_BGR << CV_8UC1 << mat_8UC1;
+#endif
 
 #if QT_VERSION >= 0x040400
     //Test data: RGB888 ==> C3
@@ -488,6 +513,11 @@ void CvMatAndImageTest::testQImage2MatShared_data()
 
     //Test data: Indexed8 ==> C1
     QTest::newRow("Indexed8_8UC1") << image_indexed8 << mat_8UC1;
+
+#if QT_VERSION >= 0x050500
+    //Test data: Grayscale8 ==> C1
+    QTest::newRow("Grayscale8_8UC1") << image_grayscale8 << mat_8UC1;
+#endif
 
 #if QT_VERSION >= 0x040400
     //Test data: RGB8888 ==> C3
