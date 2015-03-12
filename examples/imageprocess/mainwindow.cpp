@@ -162,8 +162,10 @@ void MainWindow::onFilterApplyButtonClicked()
     if (!m_convert)
         return;
     qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
-    m_convert->applyTo(m_originalMat, m_processMat);
-    ui->processView->setImage(QtOcv::mat2Image_shared(m_processMat));
+    if (m_convert->applyTo(m_originalMat, m_processMat))
+        ui->processView->setImage(QtOcv::mat2Image_shared(m_processMat));
+    else
+        statusBar()->showMessage(m_convert->errorString(), 3000);
     qApp->restoreOverrideCursor();
 }
 

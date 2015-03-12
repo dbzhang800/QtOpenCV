@@ -35,6 +35,11 @@ QWidget *AbstractConvert::paramsWidget()
     return m_widget.data();
 }
 
+QString AbstractConvert::errorString() const
+{
+    return m_errorString;
+}
+
 Blur::Blur()
 {
 
@@ -45,11 +50,12 @@ Blur::~Blur()
 
 }
 
-void Blur::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool Blur::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::blur(input, output, cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
              cv::Point(anchorXEdit->value(), anchorYEdit->value()),
              borderTypeEdit->currentData().toInt());
+    return true;
 }
 
 void Blur::initParamsWidget()
@@ -86,11 +92,11 @@ BilateralFilter::~BilateralFilter()
 
 }
 
-void BilateralFilter::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool BilateralFilter::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::bilateralFilter(input, output, dEdit->value(), sigmaColorEdit->value(),
                         sigmaSpaceEdit->value(), borderTypeEdit->currentData().toInt());
-
+    return true;
 }
 
 void BilateralFilter::initParamsWidget()
@@ -124,11 +130,12 @@ BoxFilter::~BoxFilter()
 
 }
 
-void BoxFilter::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool BoxFilter::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::boxFilter(input, output, -1, cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
                   cv::Point(anchorXEdit->value(), anchorYEdit->value()), normalizeEdit->currentData().toBool(),
                   borderTypeEdit->currentData().toInt());
+    return true;
 }
 
 void BoxFilter::initParamsWidget()
@@ -154,9 +161,10 @@ MedianBlur::~MedianBlur()
 
 }
 
-void MedianBlur::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool MedianBlur::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::medianBlur(input, output, kSizeEdit->value());
+    return true;
 }
 
 void MedianBlur::initParamsWidget()
@@ -168,11 +176,12 @@ void MedianBlur::initParamsWidget()
 }
 
 
-void GaussianBlur::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool GaussianBlur::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::GaussianBlur(input, output, cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
                      sigmaXEdit->value(), sigmaYEdit->value(),
                      borderTypeEdit->currentData().toInt());
+    return true;
 }
 
 void GaussianBlur::initParamsWidget()
@@ -199,12 +208,18 @@ void GaussianBlur::initParamsWidget()
 }
 
 
-void Threshold::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool Threshold::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     int type = typeEdit->currentData().toInt();
-    if (otsuButton->isChecked())
+    if (otsuButton->isChecked()) {
         type |= cv::THRESH_OTSU;
+        if (input.channels() != 1) {
+            m_errorString = "THRESH_OTSU only works with gray image.";
+            return false;
+        }
+    }
     cv::threshold(input, output, threshEdit->value(), maxvalEdit->value(), type);
+    return true;
 }
 
 void Threshold::initParamsWidget()
@@ -229,10 +244,11 @@ void Threshold::initParamsWidget()
 }
 
 
-void Canny::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool Canny::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::Canny(input, output, threshold1Edit->value(), threshold2Edit->value(),
               apertureSizeEdit->value(), l2gradientButton->isChecked());
+    return true;
 }
 
 void Canny::initParamsWidget()
@@ -253,13 +269,14 @@ void Canny::initParamsWidget()
 }
 
 
-void Dilate::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool Dilate::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::Mat kernel = cv::getStructuringElement(kShapeEdit->currentData().toInt(),
                                                cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
                                                cv::Point(anchorXEdit->value(), anchorYEdit->value()));
     cv::dilate(input, output, kernel, cv::Point(anchorXEdit->value(), anchorYEdit->value()),
                iterationsEdit->value(), borderTypeEdit->currentData().toInt());
+    return true;
 }
 
 void Dilate::initParamsWidget()
@@ -294,18 +311,18 @@ void Dilate::initParamsWidget()
 }
 
 
-void Erode::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool Erode::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::Mat kernel = cv::getStructuringElement(kShapeEdit->currentData().toInt(),
                                                cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
                                                cv::Point(anchorXEdit->value(), anchorYEdit->value()));
     cv::erode(input, output, kernel, cv::Point(anchorXEdit->value(), anchorYEdit->value()),
                iterationsEdit->value(), borderTypeEdit->currentData().toInt());
-
+    return true;
 }
 
 
-void HoughCircles::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool HoughCircles::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     std::vector<cv::Vec3f> circles;
     cv::HoughCircles(input, circles, CV_HOUGH_GRADIENT, dpEdit->value(), minDistEdit->value(), param1Edit->value(), param2Edit->value(),
@@ -329,6 +346,7 @@ void HoughCircles::applyTo(const cv::Mat &input, cv::Mat &output) const
                 .arg(radius);
         infoEdit->appendPlainText(info);
     }
+    return true;
 }
 
 void HoughCircles::initParamsWidget()
@@ -356,7 +374,7 @@ void HoughCircles::initParamsWidget()
 }
 
 
-void FitEllipse::applyTo(const cv::Mat &input, cv::Mat &output) const
+bool FitEllipse::applyTo(const cv::Mat &input, cv::Mat &output)
 {
 
     //Find countours
@@ -372,7 +390,7 @@ void FitEllipse::applyTo(const cv::Mat &input, cv::Mat &output) const
     else
         output = input.clone();
 
-    size_t maxEllipseCount = 4;
+    size_t maxEllipseCount = 8;
     for(size_t i = 0, foundCount = 0; (i < contours.size()) && (foundCount < maxEllipseCount); i++) {
         size_t count = contours[i].size();
 
@@ -386,16 +404,18 @@ void FitEllipse::applyTo(const cv::Mat &input, cv::Mat &output) const
         if( qMax(box.size.width, box.size.height) > qMin(box.size.width, box.size.height)*30 )
             continue;
 
-        foundCount++;
-
-        cv::ellipse(output, box, cv::Scalar(255,0,0), 1, CV_AA);
-        cv::ellipse(output, box.center, box.size*0.5f, box.angle, 0, 360, cv::Scalar(255,255,0), 1, CV_AA);
+        int pixVal = 255 - 20*foundCount;
+        cv::ellipse(output, box, cv::Scalar(pixVal,0,0), 1, CV_AA);
+        cv::ellipse(output, box.center, box.size*0.5f, box.angle, 0, 360, cv::Scalar(pixVal,pixVal,0), 1, CV_AA);
         QString ellipseInfo = QString("Center(%1, %2) Size(%3, %4) Angle %5")
                 .arg(box.center.x).arg(box.center.y)
                 .arg(box.size.width).arg(box.size.height)
                 .arg(box.angle);
         infoEdit->appendPlainText(ellipseInfo);
+
+        foundCount++;
     }
+    return true;
 }
 
 void FitEllipse::initParamsWidget()

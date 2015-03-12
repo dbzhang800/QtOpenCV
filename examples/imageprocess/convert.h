@@ -2,6 +2,7 @@
 #define ABSTRACTCONVERT_H
 
 #include <QPointer>
+#include <QString>
 
 namespace cv {
 class Mat;
@@ -18,13 +19,15 @@ public:
     AbstractConvert();
     virtual ~AbstractConvert();
 
-    virtual void applyTo(const cv::Mat &input, cv::Mat &output) const = 0;
+    virtual bool applyTo(const cv::Mat &input, cv::Mat &output) = 0;
     QWidget *paramsWidget();
+    QString errorString() const;
 
 protected:
     virtual void initParamsWidget() = 0;
 
     QPointer<QWidget> m_widget;
+    QString m_errorString;
 };
 
 class Blur : public AbstractConvert
@@ -33,7 +36,7 @@ public:
     Blur();
     ~Blur();
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 protected:
     void initParamsWidget();
@@ -51,7 +54,7 @@ public:
     BilateralFilter();
     ~BilateralFilter();
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 private:
     void initParamsWidget();
@@ -68,7 +71,7 @@ public:
     BoxFilter();
     ~BoxFilter();
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 private:
     void initParamsWidget();
@@ -82,7 +85,7 @@ public:
     MedianBlur();
     ~MedianBlur();
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 private:
     void initParamsWidget();
@@ -96,7 +99,7 @@ public:
     GaussianBlur() {}
     ~GaussianBlur() {}
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 protected:
     void initParamsWidget();
@@ -114,7 +117,7 @@ public:
     Threshold() {}
     ~Threshold() {}
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 protected:
     void initParamsWidget();
@@ -131,7 +134,7 @@ public:
     Canny() {}
     ~Canny() {}
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 protected:
     void initParamsWidget();
@@ -148,7 +151,7 @@ public:
     Dilate() {}
     ~Dilate() {}
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 protected:
     void initParamsWidget();
@@ -169,7 +172,7 @@ public:
     Erode() {}
     ~Erode() {}
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 };
 
 class HoughCircles : public AbstractConvert
@@ -178,7 +181,7 @@ public:
     HoughCircles() {}
     ~HoughCircles() {}
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 protected:
     void initParamsWidget();
@@ -200,7 +203,7 @@ public:
     FitEllipse() {}
     ~FitEllipse() {}
 
-    void applyTo(const cv::Mat &input, cv::Mat &output) const;
+    bool applyTo(const cv::Mat &input, cv::Mat &output);
 
 protected:
     void initParamsWidget();
