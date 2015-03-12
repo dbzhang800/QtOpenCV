@@ -9,6 +9,7 @@
 #include <QCloseEvent>
 #include <QSettings>
 #include <QFileDialog>
+#include <QScrollBar>
 
 enum
 {
@@ -46,6 +47,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->filterPreviewButton, SIGNAL(clicked()), SLOT(onFilterPreviewButtonClicked()));
     connect(ui->originalView, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
     connect(ui->processView, SIGNAL(colorUnderMouseChanged(QColor)), SLOT(onColorUnderMouseChanged(QColor)));
+    connect(ui->originalView, SIGNAL(realScaleChanged(double)), ui->processView, SLOT(setCurrentScale(double)));
+    connect(ui->processView, SIGNAL(realScaleChanged(double)), ui->originalView, SLOT(setCurrentScale(double)));
+    //Todo
+    connect(ui->originalView->horizontalScrollBar(), SIGNAL(valueChanged(int)), ui->processView->horizontalScrollBar(), SLOT(setValue(int)));
+    connect(ui->originalView->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->processView->verticalScrollBar(), SLOT(setValue(int)));
+
     ui->filterDockWidget->setEnabled(false);
     loadSettings();
 }

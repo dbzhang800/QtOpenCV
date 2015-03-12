@@ -202,6 +202,9 @@ bool ImageWidget::isMouseWheelEnabled() const
 */
 void ImageWidget::setCurrentScale(double factor)
 {
+    if (factor == currentScale())
+        return;
+
     if (factor == 0) {
         if (!d->m_autoAdjustEnabled) {
             d->m_autoAdjustEnabled = true;
