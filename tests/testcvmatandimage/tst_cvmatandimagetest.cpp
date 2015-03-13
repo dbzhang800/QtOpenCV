@@ -409,13 +409,13 @@ void CvMatAndImageTest::testMat2QImageShared_data()
 #endif
 
     //Test data: C4 ==> ARGB32
-    if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
-        QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_bgra << QImage::Format_Invalid << image_argb32;
-        QTest::newRow("8UC4_ARGB32") << mat_8UC4_bgra << QImage::Format_ARGB32 << image_argb32;
-    } else {
-        QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_argb << QImage::Format_Invalid << image_argb32;
-        QTest::newRow("8UC4_ARGB32") << mat_8UC4_argb << QImage::Format_ARGB32 << image_argb32;
-    }
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+    QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_bgra << QImage::Format_Invalid << image_argb32;
+    QTest::newRow("8UC4_ARGB32") << mat_8UC4_bgra << QImage::Format_ARGB32 << image_argb32;
+#else
+    QTest::newRow("8UC4_ARGB32_Invalid") << mat_8UC4_argb << QImage::Format_Invalid << image_argb32;
+    QTest::newRow("8UC4_ARGB32") << mat_8UC4_argb << QImage::Format_ARGB32 << image_argb32;
+#endif
 
 #if QT_VERSION >= 0x050200
     //Test data: C4 ==> RGBA8888
@@ -525,11 +525,11 @@ void CvMatAndImageTest::testQImage2MatShared_data()
 #endif
 
     //Test data: ARGB32 ==> C4
-    if (QSysInfo::ByteOrder == QSysInfo::LittleEndian) {
-        QTest::newRow("ARGB32_8UC4") << image_argb32 << mat_8UC4_bgra;
-    } else {
-        QTest::newRow("ARGB32_8UC4") << image_argb32 << mat_8UC4_argb;
-    }
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+    QTest::newRow("ARGB32_8UC4") << image_argb32 << mat_8UC4_bgra;
+#else
+    QTest::newRow("ARGB32_8UC4") << image_argb32 << mat_8UC4_argb;
+#endif
 
 #if QT_VERSION >= 0x050200
     //Test data: RGBA8888 ==> C4

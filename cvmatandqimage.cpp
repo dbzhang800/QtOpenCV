@@ -124,6 +124,15 @@ QImage::Format findClosestFormat(QImage::Format formatHint)
     }
     return format;
 }
+
+MatColorOrder getColorOrderOfRGB32Format()
+{
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+        return MCO_BGRA;
+#else
+        return MCO_ARGB;
+#endif
+}
 } //namespace
 
 
@@ -260,10 +269,12 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatH
         format = QImage::Format_RGB32;
         cv::Mat mat_tmp;
         cv::cvtColor(mat, mat_tmp, order == MCO_BGR ? CV_BGR2BGRA : CV_RGB2BGRA);
-        if (QSysInfo::ByteOrder == QSysInfo::LittleEndian)
-            mat_adjustCn = mat_tmp;
-        else
-            mat_adjustCn = argb2bgra(mat_tmp);
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+        mat_adjustCn = mat_tmp;
+#else
+        mat_adjustCn = argb2bgra(mat_tmp);
+#endif
+
 #endif
     } else if (mat.channels() == 4) {
         //Find best format if the formatHint can not be applied.
@@ -285,7 +296,7 @@ QImage mat2Image(const cv::Mat &mat, MatColorOrder order, QImage::Format formatH
         }
 
         //Channel order requried by the target QImage
-        MatColorOrder requiredOrder = QSysInfo::ByteOrder == QSysInfo::LittleEndian ? MCO_BGRA : MCO_ARGB;
+        MatColorOrder requiredOrder = getColorOrderOfRGB32Format();
 #if QT_VERSION >= 0x050200
         if (formatHint == QImage::Format_RGBX8888
                 || formatHint == QImage::Format_RGBA8888
@@ -334,7 +345,7 @@ cv::Mat image2Mat_shared(const QImage &img, MatColorOrder *order)
     case QImage::Format_ARGB32:
     case QImage::Format_ARGB32_Premultiplied:
         if (order)
-            *order = QSysInfo::ByteOrder == QSysInfo::LittleEndian ? MCO_BGRA : MCO_ARGB;
+            *order = getColorOrderOfRGB32Format();
         break;
 #if QT_VERSION >= 0x050200
     case QImage::Format_RGBX8888:
