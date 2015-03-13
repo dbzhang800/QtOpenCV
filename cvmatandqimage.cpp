@@ -375,7 +375,7 @@ QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint)
     if (mat.empty())
         return QImage();
 
-    QImage img;
+    //Adjust formatHint if needed.
     if (mat.type() == CV_8UC1) {
         if (formatHint != QImage::Format_Indexed8
         #if QT_VERSION >= 0x050500
@@ -385,16 +385,9 @@ QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint)
                 ) {
             formatHint = QImage::Format_Indexed8;
         }
-        img = QImage(mat.data, mat.cols, mat.rows, mat.step, formatHint);
-        if (formatHint == QImage::Format_Indexed8) {
-            QVector<QRgb> colorTable;
-            for (int i=0; i<256; ++i)
-                colorTable.append(qRgb(i,i,i));
-            img.setColorTable(colorTable);
-        }
 #if QT_VERSION >= 0x040400
     } else if (mat.type() == CV_8UC3) {
-        img = QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+        formatHint = QImage::Format_RGB888;
 #endif
     } else if (mat.type() == CV_8UC4) {
         if (formatHint != QImage::Format_RGB32
@@ -408,9 +401,17 @@ QImage mat2Image_shared(const cv::Mat &mat, QImage::Format formatHint)
                 ) {
             formatHint = QImage::Format_ARGB32;
         }
-        img = QImage(mat.data, mat.cols, mat.rows, mat.step, formatHint);
     }
 
+    QImage img(mat.data, mat.cols, mat.rows, mat.step, formatHint);
+
+    //Should we add directly support for user-customed-colorTable?
+    if (formatHint == QImage::Format_Indexed8) {
+        QVector<QRgb> colorTable;
+        for (int i=0; i<256; ++i)
+            colorTable.append(qRgb(i,i,i));
+        img.setColorTable(colorTable);
+    }
     return img;
 }
 
