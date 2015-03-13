@@ -65,7 +65,7 @@ bool Blur::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::blur(input, output, cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
              cv::Point(anchorXEdit->value(), anchorYEdit->value()),
-             borderTypeEdit->currentData().toInt());
+             borderTypeEdit->itemData(borderTypeEdit->currentIndex()).toInt());
     return true;
 }
 
@@ -106,7 +106,7 @@ BilateralFilter::~BilateralFilter()
 bool BilateralFilter::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::bilateralFilter(input, output, dEdit->value(), sigmaColorEdit->value(),
-                        sigmaSpaceEdit->value(), borderTypeEdit->currentData().toInt());
+                        sigmaSpaceEdit->value(), borderTypeEdit->itemData(borderTypeEdit->currentIndex()).toInt());
     return true;
 }
 
@@ -144,8 +144,8 @@ BoxFilter::~BoxFilter()
 bool BoxFilter::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::boxFilter(input, output, -1, cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
-                  cv::Point(anchorXEdit->value(), anchorYEdit->value()), normalizeEdit->currentData().toBool(),
-                  borderTypeEdit->currentData().toInt());
+                  cv::Point(anchorXEdit->value(), anchorYEdit->value()), normalizeEdit->itemData(borderTypeEdit->currentIndex()).toBool(),
+                  borderTypeEdit->itemData(borderTypeEdit->currentIndex()).toInt());
     return true;
 }
 
@@ -191,7 +191,7 @@ bool GaussianBlur::applyTo(const cv::Mat &input, cv::Mat &output)
 {
     cv::GaussianBlur(input, output, cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
                      sigmaXEdit->value(), sigmaYEdit->value(),
-                     borderTypeEdit->currentData().toInt());
+                     borderTypeEdit->itemData(borderTypeEdit->currentIndex()).toInt());
     return true;
 }
 
@@ -221,7 +221,7 @@ void GaussianBlur::initParamsWidget()
 
 bool Threshold::applyTo(const cv::Mat &input, cv::Mat &output)
 {
-    int type = typeEdit->currentData().toInt();
+    int type = typeEdit->itemData(typeEdit->currentIndex()).toInt();
     if (otsuButton->isChecked()) {
         type |= cv::THRESH_OTSU;
         if (input.channels() != 1) {
@@ -282,11 +282,11 @@ void Canny::initParamsWidget()
 
 bool Dilate::applyTo(const cv::Mat &input, cv::Mat &output)
 {
-    cv::Mat kernel = cv::getStructuringElement(kShapeEdit->currentData().toInt(),
+    cv::Mat kernel = cv::getStructuringElement(kShapeEdit->itemData(kShapeEdit->currentIndex()).toInt(),
                                                cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
                                                cv::Point(anchorXEdit->value(), anchorYEdit->value()));
     cv::dilate(input, output, kernel, cv::Point(anchorXEdit->value(), anchorYEdit->value()),
-               iterationsEdit->value(), borderTypeEdit->currentData().toInt());
+               iterationsEdit->value(), borderTypeEdit->itemData(borderTypeEdit->currentIndex()).toInt());
     return true;
 }
 
@@ -324,11 +324,11 @@ void Dilate::initParamsWidget()
 
 bool Erode::applyTo(const cv::Mat &input, cv::Mat &output)
 {
-    cv::Mat kernel = cv::getStructuringElement(kShapeEdit->currentData().toInt(),
+    cv::Mat kernel = cv::getStructuringElement(kShapeEdit->itemData(kShapeEdit->currentIndex()).toInt(),
                                                cv::Size(kSizeXEdit->value(), kSizeYEdit->value()),
                                                cv::Point(anchorXEdit->value(), anchorYEdit->value()));
     cv::erode(input, output, kernel, cv::Point(anchorXEdit->value(), anchorYEdit->value()),
-               iterationsEdit->value(), borderTypeEdit->currentData().toInt());
+               iterationsEdit->value(), borderTypeEdit->itemData(borderTypeEdit->currentIndex()).toInt());
     return true;
 }
 
