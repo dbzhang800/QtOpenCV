@@ -33,10 +33,7 @@
 ```
 
  * In addition, two other functions are provided which works more efficient when operating on `CV_8UC1`, `CV_8UC3(R G B)`
-   `CV_8UC4(R G B A)`, `CV_8UC4(B G R A)` or `CV_8UC4(A R G B)`.  But
-
-   * Users must make sure that the color channels order is the same as the color channels order required by QImage.
-   * Users must make sure that the source cv::Mat or QImage is living when the shared QImage or cv::Mat is used.
+   `CV_8UC4(R G B A)`, `CV_8UC4(B G R A)` or `CV_8UC4(A R G B)`. 
 
 ```cpp
     namespace QtOcv {
