@@ -52,6 +52,9 @@ win32{
     !load(opencv):message("You must create an opencv.prf, and move it to $$[QT_INSTALL_PREFIX]/mkspecs/features/")
 }
 
+# silence msvc warning 4819
+win32-msvc*:QMAKE_CXXFLAGS += -wd4819
+
 INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
 
