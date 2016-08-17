@@ -1,11 +1,8 @@
-
-include (../../QtOpenCV.pri)
+include(../../opencv.pri)
 
 QT       += testlib
 
 TARGET = tst_cvmatandimagetest
-
-add_opencv_modules(core imgproc highgui)
 
 CONFIG   += console
 CONFIG   -= app_bundle

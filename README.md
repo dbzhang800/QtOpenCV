@@ -2,11 +2,11 @@
 
  * QtOpenCV provides some helper functions to converting cv::Mat from/to QImage.
 
- * QtOpenCV provides a QtOpenCV.pri file which can be used to integrate OpenCV2.2 or newer to qmake-based project.
-
+ * QtOpenCV provides a opencv.pri file which can be used to integrate OpenCV2 or newer to qmake-based project.
+ 
 ## cv::Mat <==> QImage
 
- * Download and copy the ```cvmatandqimage.cpp``` ```cvmatandqimage.h``` to your project's source tree.
+ * Download and copy the `cvmatandqimage.cpp` `cvmatandqimage.h` and `opencv.pri` to your project's source tree.
 
  * Then take advantage of the following API to converting data between Cv::Mat and QImage.
 
@@ -63,39 +63,34 @@
     } //namespace QtOcv
 ```
 
-### Shared or Not Shared?
-Generally speaking, the non-shared API are easy to use, and not easy to get wrong. Nevertheless, users may find that
-the shared API will be useful in some cases.
+## OpenCV2 Integration
 
-For example, when you want to convert a cv::Mat object with the type `CV_8UC3` (R G B) to an QImage object with the format
-`QImage::Foramt_RGB888`, or vice versa, the shared API can be used.
+If your want to use OpenCV in your qmake based project, you can download and put the source files to any directory you wanted,
+then add following code to your .pro file.
 
-```
-QImage image1 = mat2Image_shared(mat1);
-cv::Mat mat2 = image2Mat_shared(image2);
-```
+    include (yourpath/yourpath/yourpath/opencv.pri)
 
-This is especially useful when a temporarily object is needed, take QPixmap as an example,
+### Notes for Windows User
 
-```
-QPixmap pixmap = QPixmap::fromImage(mat2Image_shared(mat1));
-```
+To make opencv.pri works for your, you need to create an `opencv.prf` file, then move the .prf file to `%QTDIR%/mkspecs/features/`. 
 
-Note, when a deep copy is needed, you can still use the shared API in following way
+The contents of .prf file more or less like this:
 
-```
-QImage image1 = mat2Image_shared(mat1).copy();
-cv::Mat mat2 = image2Mat_shared(image2).clone();
-```
+    INCLUDEPATH += D:/opencv/opencv_build/include 
+    LIBS += -LD:/opencv/opencv_build/x64/vc14/lib 
+    CONFIG(debug, debug|release) {  
+        LIBS += -lopencv_aruco310d 
+        LIBS += -lopencv_bgsegm310d 
+        LIBS += -lopencv_bioinspired310d 
+        LIBS += -lopencv_xxxxxx
+    } else {
+        LIBS += -lopencv_aruco310 
+        LIBS += -lopencv_bgsegm310 
+        LIBS += -lopencv_bioinspired310 
+        LIBS += -lopencv_xxxxxx
+    }
 
-but, in such cases, the non-shared API will be more appropriate
-
-```
-QImage image1 = mat2Image(mat1, MCO_RGB);
-cv::Mat mat2 = image2Mat(image2, CV_8UC3, MCO_RGB);
-```
-
-### Some thing you need to know
+## Some thing you need to know
 
 #### Channels order of OpenCV's image which used by highgui module is `B G R` and `B G R A`
 
@@ -170,76 +165,3 @@ If the depth of the image is 32, the following function can be used too.
     CV_32F  [0.0, 1.0]
 ```
 
-## OpenCV2 Integration
-
-```
-    add_opencv_modules(modules [, version [, includepaths [, librarypaths]]])
-```
-
-### OpenCV installed in standard location
-
-If OpenCV has been installed in the standard location all we need is
-
-```
-    include (yourpath/yourpath/youpath/QtOpenCV.pri)
-    add_opencv_modules(core imgproc highgui)
-```
-
-[ **For windows user** ] If header files have been put in `%QTDIR%/include/opencv2/` and libraries have been copied to `%QTDIR%/lib`, this can be thought standard too.
-
-### OpenCV install in non-standard location
-
-If OpenCV2 doesn't installed in the standard directory, header files paths and library paths should be provided. There are more than four ways to do so.
-
- * set system environment variables
-
-```
-   set OPENCV_VERSION=2.4.3
-   set OPENCV_INCPATH=D:/opencv/build/include
-   set OPENCV_LIBPATH=D:/opencv/build/x86/vc10/lib
-   qmake
-```
-
- * set qmake's persistent property
-```
-   qmake -set OPENCV_VERSION 2.4.3
-   qmake -set OPENCV_INCPATH D:/opencv/build/include
-   qmake -set OPENCV_LIBPATH D:/opencv/build/x86/vc10/lib
-```
-
- * using the third and forth param of `add_opencv_modules()`
-
-```
-    add_opencv_modules(core imgproc highgui, 2.4.3, D:/opencv/build/include, D:/opencv/build/x86/vc10/lib)
-```
-
-[ **Note that** , more than one paths can be provided, so you can set paths for linux/windows at the same time if you like]
-
- * set project variable before call `add_opencv_modules`
-
-```
-    OPENCV_VERSION = 2.4.3
-    OPENCV_INCPATH += D:/opencv/build/include
-    OPENCV_INCPATH += /home/debao/opencv/include
-    OPENCV_LIBPATH = D:/opencv/build/x86/vc10/lib  /home/debao/opencv/lib
-    add_opencv_modules(core imgproc highgui)
-```
-
-### Why we need to provided the version information?
-
-[ **Windows only** ]
-
-As the library name schame of OpenCV under windows is `libopencv_XXXX243.dll.a` or `opencv_XXXX243{d}.lib`, so the version information must be provided under Windows. Default is 2.4.3
-
-```
-    add_opencv_modules(core imgproc highgui, 2.4.3)
-```
-
-or
-
-```
-    OPENCV_VERSION = 2.4.3
-    add_opencv_modules(core imgproc highgui)
-```
-
-or set environment variable or qmake's variable if you don't want to touch the project files.
