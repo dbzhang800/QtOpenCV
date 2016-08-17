@@ -1,0 +1,173 @@
+#!/usr/bin/env python
+###########################################################################
+# Copyright (c) 2016 Debao Zhang <hello@debao.me>
+# All right reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+###########################################################################
+
+"""
+Note: This script is designed to run on Windows platform only.
+
+Usage:
+    python opencv_prf_generator.py [-q QMAKEPATH] opencvlibpath
+"""
+
+import os
+import re
+import sys
+import argparse
+import datetime
+import shutil
+import os.path
+
+def get_input(prompt):
+    if sys.hexversion > 0x03000000:
+        return input(prompt)
+    else:
+        return raw_input(prompt)
+
+def is_valid_opencv_inc_path(incpath):
+    return incpath and os.path.exists(os.path.join(incpath, 'opencv2/core.hpp'))
+
+def get_libraries_name(libpath, pattern, groupno):
+    librarynames = []
+    for name in os.listdir(libpath):
+        match = pattern.match(name)
+        if match:
+            librarynames.append(match.group(groupno))
+    return librarynames
+
+def get_qmake_dir(path):
+    if path.lower().endswith('qmake.exe') and os.path.exists(path):
+        return os.path.dirname(path)
+
+    if os.path.isdir(path) and os.path.exists(os.path.join(path, 'qmake.exe')):
+        return path
+
+    return None
+
+def get_qmake_dir2():
+    pathlist = os.environ['PATH'].split(';')
+    for p in pathlist:
+        if os.path.exists(os.path.join(p, 'qmake.exe')):
+            return p
+    return None
+
+def get_feature_dir(qmakedir):
+    # should I run qmake to query some paths?
+    return os.path.normpath(os.path.join(qmakedir, '../mkspecs/features/'))
+
+def get_fixed_path(path):
+    path = path.replace('\\', '/')
+    if ' ' in path:
+        path = "'{0}'".format(path)
+    return path
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generate and install opencv.prf for Windows user')
+    parser.add_argument('opencvlibpath', help="path to opencv's lib directory")
+    parser.add_argument('-d', dest='opencvlibpathd', help="path to opencv's debug lib directory")
+    parser.add_argument('-i', dest='opencvincpath', help="path to opencv's include directory")
+    parser.add_argument('-q', dest='qmakepath', help='the full path of qmake')
+    args = parser.parse_args()
+
+    # find a valid includepath
+    if args.opencvincpath:
+        opencvincpath = os.path.normpath(args.opencvincpath)
+        if not is_valid_opencv_inc_path(opencvincpath):
+            sys.stderr.write ("Can't find valid INCLUDE directory {0}\n".format(opencvincpath))
+            sys.exit(-1)
+    else:
+        # try to find include path based on lib path
+        opencvincpath = os.path.normpath(os.path.join(args.opencvlibpath, '../../../include'))
+        if not is_valid_opencv_inc_path(opencvincpath) and args.opencvlibpathd:
+            opencvincpath = os.path.normpath(os.path.join(args.opencvlibpathd, '../../../include'))
+        if not is_valid_opencv_inc_path(opencvincpath):
+            sys.stderr.write ("Can't find valid INCLUDE directory\n")
+            sys.exit(-1)
+
+    # find library names (Release Mode)
+    opencvlibpath = os.path.normpath(args.opencvlibpath)
+    librarynames = get_libraries_name(args.opencvlibpath, re.compile(r'(lib)?(opencv_.*[0-9]{3}(.dll)).(lib|a)'), 2)
+    if not librarynames:
+        sys.stderr.write ("Invalid LIB path: {0}\n".format(args.opencvlibpath))
+        sys.exit(-2)
+
+    # find library names (Debug Mode)
+    opencvlibpathd = os.path.normpath(args.opencvlibpathd) if args.opencvlibpathd else opencvlibpath
+    librarynamesd = get_libraries_name(opencvlibpathd, re.compile(r'(lib)?(opencv_.*[0-9]{3}d(.dll)).(lib|a)'), 2)
+    if not librarynamesd:
+        sys.stderr.write ("Invalid LIB path: {0}\n".format(opencvlibpathd))
+        sys.exit(-3)
+
+    with open('opencv.prf', 'w') as f:
+        f.write("""################################################################################
+#
+# Automatically generated by {0}
+# At {1}
+#
+################################################################################
+
+""".format(
+    sys.argv[0],
+    datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')
+    ))
+
+        f.write("INCLUDEPATH += {0}\n".format(get_fixed_path(opencvincpath)))
+        if not args.opencvlibpathd:
+            # Both debug and release library in the same directory
+            f.write("LIBS += -L{0}\n".format(get_fixed_path(opencvlibpath)))
+
+        f.write("CONFIG(debug, debug|release) {\n")
+        if args.opencvlibpathd:
+            f.write("    LIBS += -L{0}\n".format(get_fixed_path(opencvlibpathd)))
+        for name in librarynamesd:
+            f.write("    LIBS += -l{0}\n".format(name))
+        f.write("} else {\n")
+        if args.opencvlibpathd:
+            f.write("    LIBS += -L{0}\n".format(get_fixed_path(opencvlibpath)))
+        for name in librarynames:
+            f.write("    LIBS += -l{0}\n".format(name))
+        f.write("}\n")
+
+    print ("OK, opencv.prf has been generated.")
+
+    # find qmake
+    installok = False
+    qmakedir = get_qmake_dir(args.qmakepath) if args.qmakepath else None
+    if qmakedir:
+        featurepath = get_feature_dir(qmakedir)
+        shutil.copy2('opencv.prf', featurepath)
+        installok = True
+        print ("OK, opencv.prf has been copied to {0}".format(featurepath))
+    else:
+        qmakedir = get_qmake_dir2()
+        if qmakedir:
+            select = get_input("qmake found in {0}, do you want to use this?[y/N]".format(qmakedir))
+            if select.lower().startswith('y'):
+                featurepath = get_feature_dir(qmakedir)
+                shutil.copy2('opencv.prf', featurepath)
+                installok = True
+                print ("OK, opencv.prf has been copied to {0}".format(featurepath))
+
+    if not installok:
+        print ("You should copy opencv.prf to the %QTDIR%/mkspecs/features/ folder.")

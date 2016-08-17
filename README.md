@@ -74,7 +74,9 @@ then add following code to your .pro file.
 
 To make opencv.pri works for your, you need to create an `opencv.prf` file, then move the .prf file to `%QTDIR%/mkspecs/features/`. 
 
-The contents of .prf file more or less like this:
+#### Method 1: Create and copy the opencv.prf by hand
+
+You can use a textedit to create the .prf file. The contents of .prf file more or less looks like this:
 
     INCLUDEPATH += D:/opencv/opencv_build/include 
     LIBS += -LD:/opencv/opencv_build/x64/vc14/lib 
@@ -89,6 +91,14 @@ The contents of .prf file more or less like this:
         LIBS += -lopencv_bioinspired310 
         LIBS += -lopencv_xxxxxx
     }
+
+Then you can copy it to `%QTDIR%/mkspecs/features/`.
+
+#### Method 2: Take use of the helper script
+
+If you have installed python, the helper script `opencv_prf_generator.py` can be used to generate and install the opencv.prf file.
+
+    python opencv_prf_generator.py -q D:\Qt\QtOnline\5.6\msvc2015_x64\bin\qmake.exe D:\opencv\opencv_build\x64\vc14\lib
 
 ## Some thing you need to know
 

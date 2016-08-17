@@ -26,22 +26,7 @@
 ## Note for Windows user:
 ##   you need to create an opencv.prf file,
 ##   then move the .prf file to %QTDIR%/mkspecs/features/
-##
-##   The contents of .prf file more or less like this:
-##
-##            INCLUDEPATH += D:/opencv/opencv_build/include
-##            LIBS += -LD:/opencv/opencv_build/x64/vc14/lib
-##            CONFIG(debug, debug|release) {
-##                LIBS += -lopencv_aruco310d
-##                LIBS += -lopencv_bgsegm310d
-##                LIBS += -lopencv_bioinspired310d
-##                LIBS += -lopencv_xxxxxx
-##            } else {
-##                LIBS += -lopencv_aruco310
-##                LIBS += -lopencv_bgsegm310
-##                LIBS += -lopencv_bioinspired310
-##                LIBS += -lopencv_xxxxxxxx
-##            }
+##   see README.md for more information.
 
 unix{
     CONFIG += link_pkgconfig
