@@ -48,7 +48,8 @@ unix{
     PKGCONFIG += opencv
 }
 win32{
-    CONFIG += opencv
+    # load(opencv) instead of CONFIG+=opencv used here
+    !load(opencv):message("You must create an opencv.prf, and move it to $$[QT_INSTALL_PREFIX]/mkspecs/features/")
 }
 
 INCLUDEPATH += $$PWD
