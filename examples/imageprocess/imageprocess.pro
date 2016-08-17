@@ -3,11 +3,15 @@ include(../../QtOpenCV.pri)
 include(../shared/shared.pri)
 add_opencv_modules(core imgproc)
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT += widgets
+    CONFIG += C++11
+} else {
+    QMAKE_CXXFLAGS += -std=c++0x
+}
 
 TARGET = imageprocess
 TEMPLATE = app
-
 
 SOURCES += main.cpp\
         mainwindow.cpp \

@@ -4,7 +4,12 @@ add_opencv_modules(core imgproc)
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT += widgets
+    CONFIG += C++11
+} else {
+    QMAKE_CXXFLAGS += -std=c++0x
+}
 
 TARGET = simple
 CONFIG   += console
