@@ -70,6 +70,19 @@ then add following code to your .pro file.
 
     include (yourpath/yourpath/yourpath/opencv.pri)
 
+or you can simply add following line to your .pro file:
+
+    unix{
+        CONFIG += link_pkgconfig
+        PKGCONFIG += opencv
+    }
+    win32{
+        # load(opencv) instead of CONFIG+=opencv used here
+        !load(opencv):message("You must create an opencv.prf, and move it to $$[QT_INSTALL_PREFIX]/mkspecs/features/")
+    }
+
+As you can see, nothing else needed to do for non-windows users.
+
 ### Notes for Windows User
 
 To make opencv.pri works for your, you need to create an `opencv.prf` file, then move the .prf file to `%QTDIR%/mkspecs/features/`. 
