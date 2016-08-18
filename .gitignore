@@ -77,6 +77,8 @@ ipch/*
 .rcc
 .pch
 
+opencv.prf
+
 # Binaries
 # --------
 bin/**
