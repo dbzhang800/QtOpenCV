@@ -28,6 +28,12 @@
 ##   then move the .prf file to %QTDIR%/mkspecs/features/
 ##   see README.md for more information.
 
+# include this .pri file in your Qt Creator .pro file with include(opencv.pri)
+
+macx {
+QT_CONFIG -= no-pkg-config
+}
+
 unix{
     CONFIG += link_pkgconfig
     PKGCONFIG += opencv
