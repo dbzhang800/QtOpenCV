@@ -8,7 +8,7 @@ find_package(
   Qt5
   COMPONENTS Core Gui
   REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 3.4 REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui ${OpenCV_LIBS})
 
